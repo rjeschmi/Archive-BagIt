@@ -24,35 +24,51 @@ and verify a bag. My intention is not to be strict and enforce all of the
 specification. The reference implementation is the java version
 and I will endeavour to maintain compatibility with it.
 
-    # Get the BagIt version number
-    $bagit_version = Archive::BagIt::version($root);
+    use Archive::BagIt;
 
-    # Write a bagit.txt file
-    Archive::BagIt::write_bagit($root);
+    #read in an existing bag:
+    my $bag = Archive::BagIt->new($bag_dir);
 
-    # Write a bag-info.txt file
-    Archive::BagIt::write_baginfo($root, 'Field1' => 'content', 'Field2' => 'content', ...);
 
-    # Create a manifest-XXX.txt file
-    Archive::BagIt::manifest_md5($root);
-    Archive::BagIt::manifest_crc32($root);
+    #construct bag in an existing directory
+    my $bag = Archive::BagIt->make_bag($bag_dir);
 
     # Validate a BagIt archive against its manifest
-    $is_valid = Archive::BagIt::verify_md5($root);
+    my $bag = Archive::BagIt->new($bag_dir);
+    $is_valid = $bag->verify_bag($root);
 
 
 
 
 =head1 SUBROUTINES
 
-=head2 write_bagit
-
-writes the bagit.txt
-
+=head2 new
+   An Object Oriented Interface to a bag. Opens an existing bag.
 =cut
 
-sub write_bagit {
-    my($bagit) = @_;
+sub new {
+  my ($class,$bag_path) = @_;
+  my $self = {};
+  $self->{'bag_path'} = $bag_path || "";
+  bless $self, $class;
+  return $self;
+}
+
+=head2 make_bag
+   A constructor that will make and return a bag from a directory
+=cut
+
+sub make_bag {
+  my ($class, $bag_dir) = @_;
+  my $self=$class->new($bag_dir);
+  $self->_write_bagit($bag_dir);
+  $self->_write_baginfo($bag_dir);
+  $self->_manifest_md5($bag_dir);
+  return $self;
+}
+
+sub _write_bagit {
+    my($self, $bagit) = @_;
     open(BAGIT, ">$bagit/bagit.txt") or die("Can't open $bagit/bagit.txt for writing: $!");
     print(BAGIT "BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
     close(BAGIT);
@@ -60,14 +76,12 @@ sub write_bagit {
 }
 
 
-=head2 write_baginfo
 
-=cut
-
-sub write_baginfo {
-    my($bagit, %param) = @_;
+sub _write_baginfo {
+    my($self, $bagit, %param) = @_;
     open(BAGINFO, ">$bagit/bag-info.txt") or die("Can't open $bagit/bag-info.txt for writing: $!");
-    print(BAGINFO "Bagging-Date: " . strftime("%F", gmtime(time)) . "\n");
+    $param{'Bagging-Date'} = strftime("%F", gmtime(time));
+    $param{'Bag-Software-Agent'} = 'Archive::BagIt <http://search.cpan.org/~rjeschmi/Archive-BagIt>';
     while(my($key, $value) = each(%param)) {
         print(BAGINFO "$key: $value\n");
     }
@@ -75,12 +89,8 @@ sub write_baginfo {
     return 1;
 }
 
-=head2 manifest_crc32 
-
-=cut
-
-sub manifest_crc32 {
-    my($bagit) = @_;
+sub _manifest_crc32 {
+    my($self,$bagit) = @_;
     my $manifest_file = "$bagit/manifest-crc32.txt";
     my $data_dir = "$bagit/data";
 
@@ -103,12 +113,9 @@ sub manifest_crc32 {
     close(FH);
 }
 
-=head2 manifest_md5
 
-=cut
-
-sub manifest_md5 {
-    my($bagit) = @_;
+sub _manifest_md5 {
+    my($self, $bagit) = @_;
     my $manifest_file = "$bagit/manifest-md5.txt";
     my $data_dir = "$bagit/data";
 
@@ -131,12 +138,15 @@ sub manifest_md5 {
     close(MD5);
 }
 
-=head2 verify_md5
+=head2 verify_bag
+
+An interface to verify a bag
 
 =cut
 
-sub verify_md5 {
-    my ($bagit) = @_;
+sub verify_bag {
+    my ($self,$bagit) = @_;
+    my $bagit = $self->{'bag_path'};
     my $manifest_file = "$bagit/manifest-md5.txt";
     my $payload_dir   = "$bagit/data";
     my %manifest      = ();
@@ -180,7 +190,8 @@ sub verify_md5 {
 =cut
 
 sub get_checksum {
-  my($bagit) =@_;
+  my($self) =@_;
+  my $bagit = $self->{'bag_path'};
   open(my $SRCFILE, $bagit."/manifest-md5.txt");
   binmode($SRCFILE);
   my $srchex=Digest::MD5->new->addfile($SRCFILE)->hexdigest;
@@ -193,7 +204,8 @@ sub get_checksum {
 =cut
 
 sub version {
-    my($bagit) = @_;
+    my($self) = @_;
+    my $bagit = $self->{'bag_path'};
     my $file = join("/", $bagit, "bagit.txt");
     open(BAGIT, "<$file") or die("Cannot read $file: $!");
     my $version_string = <BAGIT>;
