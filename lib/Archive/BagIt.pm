@@ -78,9 +78,10 @@ sub _write_bagit {
 
 
 sub _write_baginfo {
+    use POSIX;
     my($self, $bagit, %param) = @_;
     open(BAGINFO, ">$bagit/bag-info.txt") or die("Can't open $bagit/bag-info.txt for writing: $!");
-    $param{'Bagging-Date'} = strftime("%F", gmtime(time));
+    $param{'Bagging-Date'} = POSIX::strftime("%F", gmtime(time));
     $param{'Bag-Software-Agent'} = 'Archive::BagIt <http://search.cpan.org/~rjeschmi/Archive-BagIt>';
     while(my($key, $value) = each(%param)) {
         print(BAGINFO "$key: $value\n");
@@ -115,6 +116,8 @@ sub _manifest_crc32 {
 
 
 sub _manifest_md5 {
+    use File::Find;
+    use Digest::MD5 qw/md5_hex/;
     my($self, $bagit) = @_;
     my $manifest_file = "$bagit/manifest-md5.txt";
     my $data_dir = "$bagit/data";
@@ -146,7 +149,7 @@ An interface to verify a bag
 
 sub verify_bag {
     my ($self,$bagit) = @_;
-    my $bagit = $self->{'bag_path'};
+    $self->{'bag_path'} = $bagit;
     my $manifest_file = "$bagit/manifest-md5.txt";
     my $payload_dir   = "$bagit/data";
     my %manifest      = ();
