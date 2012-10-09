@@ -10,11 +10,11 @@ Archive::BagIt - An interface to make and verify bags according to the BagIt sta
 
 =head1 VERSION
 
-Version 0.02
+Version 0.02_1
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.02_1';
 
 
 =head1 SYNOPSIS
