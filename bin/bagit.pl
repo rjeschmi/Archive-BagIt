@@ -18,8 +18,10 @@ bagit.pl - A commandline interface to the Perl bagit library
 
 =cut
 
-my $filepath = shift;
-my $bag = Archive::BagIt->make_bag($filepath);
+
+foreach my $filepath (@ARGV) {
+  my $bag = Archive::BagIt->make_bag($filepath);
+}
 
 
 

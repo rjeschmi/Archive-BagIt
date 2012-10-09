@@ -12,6 +12,7 @@ WriteMakefile(
       ? ('LICENSE'=> 'cc0')
       : ()),
     PL_FILES            => {},
+    EXE_FILES           => [qw(bin/bagit.pl)],
     PREREQ_PM => {
         'Test::More' => 0,
     },
