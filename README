@@ -1,5 +1,8 @@
 Archive-BagIt
 
+This is still very much *experimental* software. I wouldn't expect it to work
+anywhere important, but will try to have a stable beta version soon.
+
 Archive::BagIt loosely implements the current BagIt specification so that
 the Bags should work with the reference implementation in Java and
 it should be able to manipulate Bags created with that implementation.

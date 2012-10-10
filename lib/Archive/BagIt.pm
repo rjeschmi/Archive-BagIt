@@ -4,17 +4,22 @@ use 5.006;
 use strict;
 use warnings;
 
+=head1 WARNING
+
+This is experimental software for the moment and under active development. I
+hope to have a beta version available soon.
+
 =head1 NAME
 
 Archive::BagIt - An interface to make and verify bags according to the BagIt standard
 
 =head1 VERSION
 
-Version 0.02_1
+Version 0.02_2
 
 =cut
 
-our $VERSION = '0.02_1';
+our $VERSION = '0.02_2';
 
 
 =head1 SYNOPSIS
