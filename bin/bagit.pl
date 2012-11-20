@@ -1,28 +1,11 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/env perl 
 
 use strict;
-use Archive::BagIt;
+use warnings;
 
-=head1 NAME
+use Archive::BagIt::Cmd;
 
-bagit.pl - A commandline interface to the Perl bagit library
-
-=head1 SYNOPSIS
-
-  bagit.pl <directory>  - will create a bag in the specified directory
-
-=head1 DESCRIPTION 
-
-  Simple script that wraps up interesting parts of the Archive::BagIt interface
-
-
-=cut
-
-
-foreach my $filepath (@ARGV) {
-  my $bag = Archive::BagIt->make_bag($filepath);
-}
-
+Archive::BagIt::Cmd->run;
 
 
 

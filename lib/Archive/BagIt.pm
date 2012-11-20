@@ -59,7 +59,13 @@ sub new {
 =cut
 
 sub make_bag {
-  my ($class, $bag_dir) = @_;
+  my ($class, $bag_dir, $inplace) = @_;
+  unless ( -d $bag_dir) { die ( "source bag directory doesn't exist"); }
+  unless ( -d $bag_dir."/data") {
+    rename ($bag_dir, $bag_dir.".tmp");
+    mkdir  ($bag_dir);
+    rename ($bag_dir.".tmp", $bag_dir."/data");
+  }
   my $self=$class->new($bag_dir);
   $self->_write_bagit($bag_dir);
   $self->_write_baginfo($bag_dir);
