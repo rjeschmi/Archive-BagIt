@@ -4,17 +4,22 @@ use 5.006;
 use strict;
 use warnings;
 
+=head1 WARNING
+
+This is experimental software for the moment and under active development. I
+hope to have a beta version available soon.
+
 =head1 NAME
 
 Archive::BagIt - An interface to make and verify bags according to the BagIt standard
 
 =head1 VERSION
 
-Version 0.02_1
+Version 0.02_2
 
 =cut
 
-our $VERSION = '0.02_1';
+our $VERSION = '0.02_2';
 
 
 =head1 SYNOPSIS
@@ -49,6 +54,7 @@ and I will endeavour to maintain compatibility with it.
 sub new {
   my ($class,$bag_path) = @_;
   my $self = {};
+  $bag_path=~s!/$!!;
   $self->{'bag_path'} = $bag_path || "";
   bless $self, $class;
   return $self;
@@ -97,6 +103,7 @@ sub _write_baginfo {
 }
 
 sub _manifest_crc32 {
+    require String::CRC32;
     my($self,$bagit) = @_;
     my $manifest_file = "$bagit/manifest-crc32.txt";
     my $data_dir = "$bagit/data";
@@ -210,6 +217,7 @@ sub get_checksum {
 
 =head2 version
 
+   Returns the bagit version according to the bagit.txt file.
 =cut
 
 sub version {
@@ -224,7 +232,18 @@ sub version {
     return $1 || 0;
 }
 
+sub _payload_files{
+  my($self) = @_;
 
+  my $payload_dir = $self->{"bag_path"};
+  
+  use File::Find;
+  my @payload=();
+  File::Find::find({push(@payload,$File::Find::name); print "name: ".$File::Find::name."\n"; }, $payload_dir);
+  
+  return @payload;
+
+}
 =head1 AUTHOR
 
 =over 4
