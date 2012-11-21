@@ -1,21 +1,16 @@
-use 5.006;
-use strict;
-use warnings;
-use ExtUtils::MakeMaker;
+use inc::Module::Install;
 
-WriteMakefile(
-    NAME                => 'Archive::BagIt',
-    AUTHOR              => q{Robert Schmidt <rjeschmi@gmail.com>},
-    VERSION_FROM        => 'lib/Archive/BagIt.pm',
-    ABSTRACT_FROM       => 'lib/Archive/BagIt.pm',
-    ($ExtUtils::MakeMaker::VERSION >= 6.3002
-      ? ('LICENSE'=> 'cc0')
-      : ()),
-    PL_FILES            => {},
-    EXE_FILES           => [qw(bin/bagit.pl)],
-    PREREQ_PM => {
-        'Test::More' => 0,
-    },
-    dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean               => { FILES => 'Archive-BagIt-*' },
-);
+name 'Archive-BagIt';
+all_from 'lib/Archive/BagIt.pm';
+
+
+requires 'Moose';
+requires 'MooseX::App::Cmd';
+requires 'File::Find';
+requires 'Digest::MD5';
+
+
+tests 't/*.t';
+
+WriteAll;
+
