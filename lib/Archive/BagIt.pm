@@ -132,7 +132,7 @@ sub _manifest_crc32 {
 
 sub _manifest_md5 {
     use File::Find;
-    use Digest::MD5 qw/md5_hex/;
+    use Digest::MD5;
     my($self, $bagit) = @_;
     my $manifest_file = "$bagit/manifest-md5.txt";
     my $data_dir = "$bagit/data";
@@ -145,7 +145,7 @@ sub _manifest_md5 {
             my $file = $File::Find::name;
             if (-f $_) {
                 open(DATA, "<$_") or die("Cannot read $_: $!");
-                my $digest = md5_hex(join("", <DATA>));
+                my $digest = Digest::MD5->new->addfile(*DATA)->hexdigest;
                 close(DATA);
                 my $filename = substr($file, length($bagit) + 1);
                 print($md5_fh "$digest  $filename\n");
