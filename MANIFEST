@@ -1,16 +1,19 @@
 bin/bagit.pl
 Changes
+ignore.txt
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
 inc/Module/Install/Fetch.pm
 inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
+inc/Module/Install/Scripts.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/Archive/BagIt.pm
 lib/Archive/BagIt/Cmd.pm
 lib/Archive/BagIt/Cmd/Command/create.pm
+lib/Archive/BagIt/Cmd/Command/verify.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml
@@ -18,5 +21,14 @@ README
 t/00-load.t
 t/boilerplate.t
 t/manifest.t
+t/payload_files.t
 t/pod-coverage.t
 t/pod.t
+t/src/src_bag/bag-info.txt
+t/src/src_bag/bagit.txt
+t/src/src_bag/data/1
+t/src/src_bag/data/2
+t/src/src_bag/manifest-md5.txt
+t/src/src_bag/tagmanifest-md5.txt
+t/src/src_files/1
+t/src/src_files/2
