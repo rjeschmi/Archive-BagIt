@@ -4,6 +4,8 @@ use 5.006;
 use strict;
 use warnings;
 
+our @checksum_algos = qw(md5 sha1);
+
 =head1 WARNING
 
 This is experimental software for the moment and under active development. I
@@ -15,11 +17,11 @@ Archive::BagIt - An interface to make and verify bags according to the BagIt sta
 
 =head1 VERSION
 
-Version 0.02_5
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02_5';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -164,7 +166,15 @@ An interface to verify a bag
 
 sub verify_bag {
     my ($self,$bagit) = @_;
-    $self->{'bag_path'} = $bagit;
+    if($bagit) {
+      $self->{'bag_path'} = $bagit;
+    }
+    elsif ($self->{'bag_path'}) {
+      $bagit = $self->{'bag_path'};
+    }
+    else {
+      die ("no bag_path defined");
+    }
     my $manifest_file = "$bagit/manifest-md5.txt";
     my $payload_dir   = "$bagit/data";
     my %manifest      = ();
@@ -234,27 +244,75 @@ sub version {
     return $1 || 0;
 }
 
+=head2 payload_files
+
+  Returns an array with all of the payload files (those files that are below the data directory)
+
+=cut
+
+sub payload_files {
+  my($self) = @_;
+  my @payload = $self->_payload_files();
+  return @payload; 
+}
+
 sub _payload_files{
   my($self) = @_;
 
-  my $payload_dir = $self->{"bag_path"};
+  my $payload_dir = join( "/", $self->{"bag_path"}, "data");
   
   use File::Find;
   my @payload=();
   File::Find::find( sub{ 
     push(@payload,$File::Find::name); 
-    print "name: ".$File::Find::name."\n"; 
+    #print "name: ".$File::Find::name."\n"; 
   }, $payload_dir);
   
   return @payload;
 
+}
+
+=head2 manifest_files
+
+  return an array with the list of manifest files that exist in the bag
+
+=cut
+
+sub manifest_files {
+  my($self) = @_;
+  my @manifest_files;
+  foreach my $algo (@checksum_algos) {
+    my $manifest_file = $self->{"bag_path"}."/manifest-$algo.txt";
+    if (-f $manifest_file) {
+      push @manifest_files, $manifest_file;
+    }
+  }
+  return @manifest_files;
+}
+
+=head2 tagmanifest_files
+  
+  return an array with the list of tagmanifest files
+
+=cut
+
+sub tagmanifest_files {
+  my ($self) = @_;
+  my @tagmanifest_files;
+  foreach my $algo (@checksum_algos) {
+    my $tagmanifest_file = $self->{"bag_path"}."/tagmanifest-$algo.txt";
+    if (-f $tagmanifest_file) {
+      push @tagmanifest_files, $tagmanifest_file;
+    }
+  }
+  return @tagmanifest_files;
+  
 }
 =head1 AUTHOR
 
 Robert Schmidt, E<lt>rjeschmi at gmail.comE<gt>
 William Wueppelmann, E<lt>william at c7a.caE<gt>
 
-=back
 
 =head1 BUGS
 
