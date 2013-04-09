@@ -6,6 +6,8 @@ use warnings;
 
 our @checksum_algos = qw(md5 sha1);
 
+use File::Find;
+
 =head1 WARNING
 
 This is experimental software for the moment and under active development. I
@@ -80,6 +82,7 @@ sub make_bag {
   $self->_write_bagit($bag_dir);
   $self->_write_baginfo($bag_dir);
   $self->_manifest_md5($bag_dir);
+  $self->_tagmanifest_md5($bag_dir);
   return $self;
 }
 
@@ -133,7 +136,6 @@ sub _manifest_crc32 {
 
 
 sub _manifest_md5 {
-    use File::Find;
     use Digest::MD5;
     my($self, $bagit) = @_;
     my $manifest_file = "$bagit/manifest-md5.txt";
@@ -156,6 +158,36 @@ sub _manifest_md5 {
         $data_dir
     );
     close(MD5);
+}
+
+sub _tagmanifest_md5 {
+  my ($self, $bagit) = @_;
+
+  use Digest::MD5;
+
+  my $tagmanifest_file= "$bagit/tagmanifest-md5.txt";
+ 
+  open (MD5, ">$tagmanifest_file") or die ("Cannot create tagmanifest-md5.txt: $! \n");
+
+  my $md5_fh = *MD5;
+  find (
+    sub {
+      my $file = $File::Find::name;
+      if (-f $_ && $_=~m/^tagmanifest-.*\.txt/) {
+        open(DATA, "<$_") or die("Cannot read $_: $!");
+        my $digest = Digest::MD5->new->addfile(*DATA)->hexdigest;
+        close(DATA);
+        my $filename = substr($file, length($bagit) + 1);
+        print($md5_fh "$digest  $filename\n");
+ 
+      }
+      elsif($_=~m/\/data$/) {
+        $File::Find::prune=1;
+      }
+
+  }, $bagit);
+
+  close(MD5);
 }
 
 =head2 verify_bag
@@ -261,7 +293,6 @@ sub _payload_files{
 
   my $payload_dir = join( "/", $self->{"bag_path"}, "data");
   
-  use File::Find;
   my @payload=();
   File::Find::find( sub{ 
     push(@payload,$File::Find::name); 

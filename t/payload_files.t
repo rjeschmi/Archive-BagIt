@@ -1,4 +1,5 @@
-#!perl -T
+
+BEGIN { chdir 't' if -d 't' }
 
 use Test::More 'no_plan';
 use strict;
@@ -8,7 +9,8 @@ use lib '../lib';
 
 use File::Spec;
 use Data::Dumper;
-
+use File::Path;
+use File::Copy;
 
 my $Class = 'Archive::BagIt';
 use_ok($Class);
@@ -34,3 +36,35 @@ my $DST_BAG = File::Spec->catdir(@ROOT, 'dst_bag');
 
   ok($result,     "Bag verifies");
 }
+
+{
+  mkdir($DST_BAG);
+  copy($SRC_FILES."/*", $DST_BAG);
+
+  my $bag = $Class->make_bag($DST_BAG);
+  
+  ok ($bag,       "Object created");
+  isa_ok ($bag,   $Class);
+  my $result = $bag->verify_bag();
+
+  rmtree($DST_BAG);
+}
+
+{
+
+  my $bag = $Class->new($SRC_BAG);
+  my @manifests = $bag->manifest_files();
+  my $cnt = scalar @manifests;
+  my $expect = 1;
+
+  is($cnt, $expect, "All manifests counted");
+
+  my @tagmanifests = $bag->tagmanifest_files();
+  my $tagcnt = scalar @tagmanifests;
+  my $tagexpect =1;
+
+  is($tagcnt, $tagexpect, "All tagmanifests counted");
+
+}
+
+__END__
