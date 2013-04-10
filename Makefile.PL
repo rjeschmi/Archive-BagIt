@@ -10,7 +10,6 @@ requires 'File::Find';
 requires 'Digest::MD5';
 
 install_script("bin/bagit.pl");
-
 tests 't/*.t';
 
 WriteAll;

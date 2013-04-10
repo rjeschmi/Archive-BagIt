@@ -7,7 +7,7 @@ use warnings;
 our @checksum_algos = qw(md5 sha1);
 
 use File::Find;
-
+use Data::Dumper;
 =head1 WARNING
 
 This is experimental software for the moment and under active development. I
@@ -23,7 +23,7 @@ Version 0.03
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.031';
 
 
 =head1 SYNOPSIS
@@ -44,7 +44,7 @@ and I will endeavour to maintain compatibility with it.
 
     # Validate a BagIt archive against its manifest
     my $bag = Archive::BagIt->new($bag_dir);
-    $is_valid = $bag->verify_bag($root);
+    $is_valid = $bag->verify_bag();
 
 
 
@@ -61,9 +61,39 @@ sub new {
   $bag_path=~s!/$!!;
   $self->{'bag_path'} = $bag_path || "";
   bless $self, $class;
+  if($bag_path) {
+    $self->_open();
+  }
   return $self;
 }
 
+sub _open {
+  my($self) = @_;
+
+  $self->_load_manifests(); 
+
+  return $self;
+}
+
+sub _load_manifests {
+  my ($self) = @_;
+
+  my @manifests = $self->manifest_files();
+  #print "loading: ".Dumper(@manifests);
+  foreach my $manifest_file (@manifests) {
+    die("Cannot open $manifest_file: $!") unless (open (MANIFEST, $manifest_file));
+    while (my $line = <MANIFEST>) {
+        chomp($line);
+        #print "line: $line\n";
+        my($digest, $file) = split(/\s+/, $line, 2);
+        $self->{entries}->{$file} = $digest;
+    }
+    close(MANIFEST);
+  }
+
+  return $self;
+
+}
 =head2 make_bag
    A constructor that will make and return a bag from a directory
 
@@ -83,6 +113,7 @@ sub make_bag {
   $self->_write_baginfo($bag_dir);
   $self->_manifest_md5($bag_dir);
   $self->_tagmanifest_md5($bag_dir);
+  $self->_open();
   return $self;
 }
 
@@ -140,7 +171,7 @@ sub _manifest_md5 {
     my($self, $bagit) = @_;
     my $manifest_file = "$bagit/manifest-md5.txt";
     my $data_dir = "$bagit/data";
-
+    print "creating manifest: $data_dir\n";
     # Generate MD5 digests for all of the files under ./data
     open(MD5, ">$manifest_file") or die("Cannot create manifest-md5.txt: $!\n");
     my $md5_fh = *MD5;
@@ -153,6 +184,7 @@ sub _manifest_md5 {
                 close(DATA);
                 my $filename = substr($file, length($bagit) + 1);
                 print($md5_fh "$digest  $filename\n");
+                #print "lineout: $digest $filename\n";
             }
         },
         $data_dir
@@ -199,7 +231,8 @@ An interface to verify a bag
 sub verify_bag {
     my ($self,$bagit) = @_;
     if($bagit) {
-      $self->{'bag_path'} = $bagit;
+      #deprecated
+      $self=$self->new($bagit);
     }
     elsif ($self->{'bag_path'}) {
       $bagit = $self->{'bag_path'};
@@ -216,13 +249,10 @@ sub verify_bag {
     die("$payload_dir is not a directory") unless -d ($payload_dir);
 
     # Read the manifest file
-    die("Cannot open $manifest_file: $!") unless (open (MANIFEST, $manifest_file));
-    while (my $line = <MANIFEST>) {
-        chomp($line);
-        my($digest, $file) = split(/\s+/, $line, 2);
-        $manifest{$file} = $digest;
+    #print Dumper($self->{entries});
+    foreach my $entry (keys($self->{entries})) {
+      $manifest{$entry} = $self->{entries}->{$entry};
     }
-    close(MANIFEST);
 
     # Compile a list of payload files
     find(sub{ push(@payload, $File::Find::name)  }, $payload_dir);
@@ -318,6 +348,7 @@ sub manifest_files {
       push @manifest_files, $manifest_file;
     }
   }
+  #print Dumper(@manifest_files);
   return @manifest_files;
 }
 
