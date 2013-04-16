@@ -353,7 +353,7 @@ sub _non_payload_files {
   my @payload = ();
   File::Find::find( sub {
     if(-f $File::Find::name) {
-      my ($relpath) = ($File::Find::name=~m!$self->{"bag_path"}(/.*$)!);
+      my ($relpath) = ($File::Find::name=~m!$self->{"bag_path"}/(.*$)!);
       push(@payload, $relpath);
     }
     elsif(-d _ && $_ eq "data") {
