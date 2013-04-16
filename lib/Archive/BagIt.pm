@@ -23,7 +23,7 @@ Version 0.03
 
 =cut
 
-our $VERSION = '0.031';
+our $VERSION = '0.032';
 
 
 =head1 SYNOPSIS
@@ -58,9 +58,9 @@ and I will endeavour to maintain compatibility with it.
 sub new {
   my ($class,$bag_path) = @_;
   my $self = {};
+  bless $self, $class;
   $bag_path=~s!/$!!;
   $self->{'bag_path'} = $bag_path || "";
-  bless $self, $class;
   if($bag_path) {
     $self->_open();
   }
@@ -333,6 +333,40 @@ sub _payload_files{
 
 }
 
+=head2 non_payload_files
+
+  Returns an array with files that are in the root of the bag, non-manifest files
+
+=cut
+
+sub non_payload_files{
+  my ($self) = @_;
+  my @non_payload = $self->_non_payload_files();
+  return @non_payload;
+
+}
+
+
+sub _non_payload_files {
+  my($self) = @_;
+
+  my @payload = ();
+  File::Find::find( sub {
+    if(-f $File::Find::name) {
+      my ($relpath) = ($File::Find::name=~m!$self->{"bag_path"}(/.*$)!);
+      push(@payload, $relpath);
+    }
+    elsif(-d _ && $_ eq "data") {
+      $File::Find::prune=1;
+    }
+    else {
+      #directories in the root other than data?
+    }
+  }, $self->{"bag_path"});
+
+  return @payload;
+
+}
 =head2 manifest_files
 
   return an array with the list of manifest files that exist in the bag
