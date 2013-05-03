@@ -23,7 +23,7 @@ Version 0.03
 
 =cut
 
-our $VERSION = '0.033';
+our $VERSION = '0.034';
 
 
 =head1 SYNOPSIS
@@ -71,6 +71,7 @@ sub _open {
   my($self) = @_;
 
   $self->_load_manifests(); 
+  $self->_load_tagmanifests(); 
 
   return $self;
 }
@@ -93,6 +94,23 @@ sub _load_manifests {
 
   return $self;
 
+}
+
+sub _load_tagmanifests {
+  my ($self) = @_;
+  
+  my @tagmanifests = $self->tagmanifest_files();
+  foreach my $tagmanifest_file (@tagmanifests) {
+    die("Cannot open $tagmanifest_file: $!") unless (open(TAGMANIFEST, $tagmanifest_file));
+    while (my $line = <TAGMANIFEST>) {
+      chomp($line);
+      my($digest,$file) = split(/\s+/, $line, 2);
+      $self->{tagentries}->{$file} = $digest;
+    }
+    close(TAGMANIFEST);
+
+  }
+  return $self;
 }
 =head2 make_bag
    A constructor that will make and return a bag from a directory
