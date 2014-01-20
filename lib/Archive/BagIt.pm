@@ -23,7 +23,7 @@ Version 0.03
 
 =cut
 
-our $VERSION = '0.034';
+our $VERSION = '0.035';
 
 
 =head1 SYNOPSIS
@@ -86,7 +86,7 @@ sub _load_manifests {
     while (my $line = <MANIFEST>) {
         chomp($line);
         #print "line: $line\n";
-        my($digest, $file) = split(/\s+/, $line, 2);
+        my($digest, $file) = split(/\s+/, $line, 2) or die ("This must not be a valid manifest file");
         $self->{entries}->{$file} = $digest;
     }
     close(MANIFEST);
