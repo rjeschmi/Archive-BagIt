@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 our @checksum_algos = qw(md5 sha1);
-
+our $DEBUG=0;
 use File::Find;
 use Data::Dumper;
 =head1 WARNING
@@ -23,7 +23,7 @@ Version 0.03
 
 =cut
 
-our $VERSION = '0.035';
+our $VERSION = '0.036';
 
 
 =head1 SYNOPSIS
@@ -80,14 +80,18 @@ sub _load_manifests {
   my ($self) = @_;
 
   my @manifests = $self->manifest_files();
-  #print "loading: ".Dumper(@manifests);
   foreach my $manifest_file (@manifests) {
     die("Cannot open $manifest_file: $!") unless (open (MANIFEST, $manifest_file));
     while (my $line = <MANIFEST>) {
         chomp($line);
-        #print "line: $line\n";
-        my($digest, $file) = split(/\s+/, $line, 2) or die ("This must not be a valid manifest file");
-        $self->{entries}->{$file} = $digest;
+        my ($digest,$file);
+        ($digest, $file) = $line =~ /^([a-f0-9]+)\s+([a-zA-Z0-9\.\/\-]+)/;
+        if(!$file) {
+          die ("This is not a valid manifest file");
+        } else {
+          print "file: $file \n" if $DEBUG;
+          $self->{entries}->{$file} = $digest;
+        }
     }
     close(MANIFEST);
   }
@@ -247,20 +251,15 @@ An interface to verify a bag
 =cut
 
 sub verify_bag {
-    my ($self,$bagit) = @_;
-    if($bagit) {
-      #deprecated
-      $self=$self->new($bagit);
-    }
-    elsif ($self->{'bag_path'}) {
-      $bagit = $self->{'bag_path'};
-    }
-    else {
-      die ("no bag_path defined");
-    }
+    my ($self,$opts) = @_;
+    #removed the ability to pass in a bag in the parameters, but might want options
+    #like $return all errors rather than dying on first one
+    my $bagit = $self->{'bag_path'};
     my $manifest_file = "$bagit/manifest-md5.txt";
     my $payload_dir   = "$bagit/data";
     my %manifest      = ();
+    my $return_all_errors = $opts->{return_all_errors};
+    my %invalids;
     my @payload       = ();
 
     die("$manifest_file is not a regular file") unless -f ($manifest_file);
@@ -279,16 +278,30 @@ sub verify_bag {
     foreach my $file (@payload) {
         next if (-d ($file));
         my $local_name = substr($file, length($bagit) + 1);
-        return 0 unless ($manifest{$local_name});
-        open(DATA, "<$bagit/$local_name") or return 0;
+        unless ($manifest{$local_name}) {
+          die ("file found not in manifest: [$local_name]");
+        }
+        open(DATA, "<$bagit/$local_name") or die ("Cannot open $local_name");
         my $digest = Digest::MD5->new->addfile(*DATA)->hexdigest;
         close(DATA);
-        return 0 unless ($digest eq $manifest{$local_name});
+        unless ($digest eq $manifest{$local_name}) {
+          if($return_all_errors) {
+            $invalids{$local_name} = $digest;
+          }
+          else {
+            die ("file: $local_name invalid");
+          }
+        }
         delete($manifest{$local_name});
     }
-
+    if($return_all_errors && keys(%invalids) ) {
+      foreach my $invalid (keys(%invalids)) {
+        print "invalid: $invalid hash: ".$invalids{$invalid}."\n";
+      }
+      die ("bag verify failed with invalid files");
+    }
     # Make sure there are no missing files
-    return 0 if (keys(%manifest));
+    if (keys(%manifest)) { die ("Missing files in bag"); }
 
     return 1;
 }
