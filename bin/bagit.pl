@@ -3,9 +3,9 @@
 use strict;
 use warnings;
 
-use Archive::BagIt::Cmd;
+use Archive::BagIt::App;
 
-Archive::BagIt::Cmd->run;
+Archive::BagIt::App->new_with_command->run;
 
 
 

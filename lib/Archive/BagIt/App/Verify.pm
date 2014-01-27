@@ -21,21 +21,19 @@ sub abstract {
 
 
 sub run {
-  my ( $self, $opt, $args) = @_;
+  my ( $self) = @_;
 
   use Archive::BagIt;
-
-  foreach my $dir (@$args){
-    my $bag = Archive::BagIt->new($dir);
-    eval {
-      $bag->verify_bag($dir);
-    };
-    if ($@) {
-      print "FAIL: ".$dir." : $! $@\n";
-    }
-    else {
-      print "PASS: ".$dir."\n";
-    }
+  my $bag_path = $self->bag_path;
+  my $bag = Archive::BagIt->new($bag_path);
+  eval {
+      $bag->verify_bag();
+  };
+  if ($@) {
+      print "FAIL: ".$bag_path." : $! $@\n";
+  }
+  else {
+      print "PASS: ".$bag_path."\n";
   }
 }
 

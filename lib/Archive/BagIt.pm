@@ -85,7 +85,7 @@ sub _load_manifests {
     while (my $line = <MANIFEST>) {
         chomp($line);
         my ($digest,$file);
-        ($digest, $file) = $line =~ /^([a-f0-9]+)\s+([a-zA-Z0-9\.\/\-]+)/;
+        ($digest, $file) = $line =~ /^([a-f0-9]+)\s+([a-zA-Z0-9_\.\/\-]+)/;
         if(!$file) {
           die ("This is not a valid manifest file");
         } else {
