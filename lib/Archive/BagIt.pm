@@ -23,7 +23,7 @@ Version 0.03
 
 =cut
 
-our $VERSION = '0.036';
+our $VERSION = '0.037';
 
 
 =head1 SYNOPSIS
@@ -275,15 +275,19 @@ sub verify_bag {
     find(sub{ push(@payload, $File::Find::name)  }, $payload_dir);
 
     # Evaluate each file against the manifest
+    my $digestobj = new Digest::MD5;
     foreach my $file (@payload) {
         next if (-d ($file));
         my $local_name = substr($file, length($bagit) + 1);
         unless ($manifest{$local_name}) {
           die ("file found not in manifest: [$local_name]");
         }
-        open(DATA, "<$bagit/$local_name") or die ("Cannot open $local_name");
-        my $digest = Digest::MD5->new->addfile(*DATA)->hexdigest;
-        close(DATA);
+                #my $start_time=time();
+        open(my $fh, "<:mmap", "$bagit/$local_name") or die ("Cannot open $local_name");
+        binmode($fh);
+        my $digest = $digestobj->addfile($fh)->hexdigest;
+        close($fh);
+                #print "$bagit/$local_name md5 in ".(time()-$start_time)."\n";
         unless ($digest eq $manifest{$local_name}) {
           if($return_all_errors) {
             $invalids{$local_name} = $digest;
@@ -307,6 +311,8 @@ sub verify_bag {
 }
 
 =head2 get_checksum 
+
+   This is the checksum for the bag, md5 of the manifest-md5.txt
 
 =cut
 
