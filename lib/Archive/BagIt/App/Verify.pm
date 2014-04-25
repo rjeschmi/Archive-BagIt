@@ -33,6 +33,7 @@ sub run {
   my $bag_path = $self->bag_path;
   my ($bag);
   if($self->fast) {
+    use Archive::BagIt::Fast;
     $bag = Archive::BagIt::Fast->new($bag_path);
   }
   else {
