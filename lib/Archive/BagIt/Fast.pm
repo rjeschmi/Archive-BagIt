@@ -50,7 +50,7 @@ sub verify_bag {
 
         open(my $fh, "<:raw", "$bagit/$local_name") or die ("Cannot open $local_name");
         stat $fh;
-        if (-s _ < 3000000) {
+        if (-s _ < 8000000) {
           sysread $fh, my $data, -s _;
           $digest = $digestobj->add($data)->hexdigest;
         }

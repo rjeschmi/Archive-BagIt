@@ -13,6 +13,13 @@ use Data::Dumper;
 This is experimental software for the moment and under active development. I
 hope to have a beta version available soon.
 
+We use it fairly widely in-house, but it doesn't necessarily implement all of the specs.
+
+Email me with anything you need done urgently.
+
+Also: Check out Archive::BagIt::Fast if you are willing to add some extra dependendies to get
+better speed by mmap-ing files.
+
 =head1 NAME
 
 Archive::BagIt - An interface to make and verify bags according to the BagIt standard
@@ -116,6 +123,7 @@ sub _load_tagmanifests {
   }
   return $self;
 }
+
 =head2 make_bag
    A constructor that will make and return a bag from a directory
 
@@ -246,7 +254,10 @@ sub _tagmanifest_md5 {
 
 =head2 verify_bag
 
-An interface to verify a bag
+An interface to verify a bag.
+
+You might also want to check Archive::BagIt::Fast to see a more direct way of accessing files (and thus faster).
+
 
 =cut
 
@@ -405,6 +416,8 @@ sub _non_payload_files {
   return @payload;
 
 }
+
+
 =head2 manifest_files
 
   return an array with the list of manifest files that exist in the bag
