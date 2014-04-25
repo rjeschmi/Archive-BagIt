@@ -1,6 +1,6 @@
 package Archive::BagIt::Fast;
 
-use base "Archive::BagIt";
+use parent "Archive::BagIt";
 
 use IO::AIO;
 
@@ -35,7 +35,7 @@ sub verify_bag {
     }
 
     # Compile a list of payload files
-    find(sub{ push(@payload, $File::Find::name)  }, $payload_dir);
+    File::Find::find(sub{ push(@payload, $File::Find::name)  }, $payload_dir);
 
     # Evaluate each file against the manifest
     my $digestobj = new Digest::MD5;
@@ -86,3 +86,4 @@ sub verify_bag {
 }
 
 
+1;
