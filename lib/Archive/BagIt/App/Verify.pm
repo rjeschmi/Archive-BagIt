@@ -15,6 +15,12 @@ option 'return_all_errors' => (
   documentation => q[collect all errors rather than dying on first],
 );
 
+option 'fast' => (
+  is => 'rw',
+  isa => 'Bool',
+  documentation => q[use Archive::BagIt::Fast instead...],
+);
+
 sub abstract {
   return 'verifies a valid bag';
 }
@@ -25,7 +31,13 @@ sub run {
 
   use Archive::BagIt;
   my $bag_path = $self->bag_path;
-  my $bag = Archive::BagIt->new($bag_path);
+  my ($bag);
+  if($self->fast) {
+    $bag = Archive::BagIt::Fast->new($bag_path);
+  }
+  else {
+    $bag = Archive::BagIt->new($bag_path);
+  }
   eval {
       $bag->verify_bag();
   };
