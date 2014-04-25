@@ -23,7 +23,7 @@ Version 0.03
 
 =cut
 
-our $VERSION = '0.037';
+our $VERSION = '0.038';
 
 
 =head1 SYNOPSIS
@@ -279,15 +279,16 @@ sub verify_bag {
     foreach my $file (@payload) {
         next if (-d ($file));
         my $local_name = substr($file, length($bagit) + 1);
+        my ($digest);
         unless ($manifest{$local_name}) {
           die ("file found not in manifest: [$local_name]");
         }
-                #my $start_time=time();
-        open(my $fh, "<:mmap", "$bagit/$local_name") or die ("Cannot open $local_name");
-        binmode($fh);
-        my $digest = $digestobj->addfile($fh)->hexdigest;
+        #my $start_time=time();
+        
+        open(my $fh, "<", "$bagit/$local_name") or die ("Cannot open $local_name");
+        $digest = $digestobj->addfile($fh)->hexdigest;
         close($fh);
-                #print "$bagit/$local_name md5 in ".(time()-$start_time)."\n";
+        #print "$bagit/$local_name md5 in ".(time()-$start_time)."\n";
         unless ($digest eq $manifest{$local_name}) {
           if($return_all_errors) {
             $invalids{$local_name} = $digest;
