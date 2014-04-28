@@ -5,3 +5,5 @@ Revision history for Archive-BagIt
 
 0.02    Tue  9 Oct 2012 22:42:44 EDT
         Added bagit.pl as a command-line interface
+
+{{$NEXT}}
