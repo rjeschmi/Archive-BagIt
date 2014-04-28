@@ -51,3 +51,16 @@ sub run {
 }
 
 1; 
+
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Archive::BagIt::App::Verify - verifies a bag
+
+=cut

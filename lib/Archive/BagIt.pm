@@ -24,14 +24,6 @@ better speed by mmap-ing files.
 
 Archive::BagIt - An interface to make and verify bags according to the BagIt standard
 
-=head1 VERSION
-
-Version 0.03
-
-=cut
-
-our $VERSION = '0.038';
-
 
 =head1 SYNOPSIS
 
