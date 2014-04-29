@@ -7,3 +7,5 @@ Revision history for Archive-BagIt
         Added bagit.pl as a command-line interface
 
 {{$NEXT}}
+
+0.043     2014-04-29 11:37:16-04:00 America/Toronto (TRIAL RELEASE)
