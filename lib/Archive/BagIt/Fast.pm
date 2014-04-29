@@ -22,8 +22,11 @@ sub verify_bag {
     my $payload_dir   = "$bagit/data";
     my %manifest      = ();
     my $return_all_errors = $opts->{return_all_errors};
+    my $MMAP_MIN = $opts->{mmap_min} || 8000000;
     my %invalids;
     my @payload       = ();
+
+  
 
     die("$manifest_file is not a regular file") unless -f ($manifest_file);
     die("$payload_dir is not a directory") unless -d ($payload_dir);
@@ -50,7 +53,7 @@ sub verify_bag {
 
         open(my $fh, "<:raw", "$bagit/$local_name") or die ("Cannot open $local_name");
         stat $fh;
-        if (-s _ < 8000000) {
+        if (-s _ < $MMAP_MIN ) {
           sysread $fh, my $data, -s _;
           $digest = $digestobj->add($data)->hexdigest;
         }
