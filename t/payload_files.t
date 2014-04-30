@@ -47,6 +47,7 @@ my $DST_BAG = File::Spec->catdir(@ROOT, 'dst_bag');
   ok ($bag,       "Object created");
   isa_ok ($bag,   $Class);
   my $result = $bag->verify_bag();
+  ok($result,     "Bag verifies");
 
   rmtree($DST_BAG);
 }

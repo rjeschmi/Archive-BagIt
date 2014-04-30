@@ -1,11 +1,16 @@
 Revision history for Archive-BagIt
 
-0.01    Tue  2 Oct 2012 22:36:53 EDT
-        First version, released on an unsuspecting world.
+
+{{$NEXT}}
+        Just fixed a bug that only really showed up in testing on older perls
+        
+0.043     2014-04-29 11:37:16-04:00 America/Toronto 
+
+0.033   A blur, I didn't really update this, there is some stuff at github
 
 0.02    Tue  9 Oct 2012 22:42:44 EDT
         Added bagit.pl as a command-line interface
 
-{{$NEXT}}
+0.01    Tue  2 Oct 2012 22:36:53 EDT
+        First version, released on an unsuspecting world.
 
-0.043     2014-04-29 11:37:16-04:00 America/Toronto (TRIAL RELEASE)

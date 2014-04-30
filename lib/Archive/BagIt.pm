@@ -270,7 +270,7 @@ sub verify_bag {
 
     # Read the manifest file
     #print Dumper($self->{entries});
-    foreach my $entry (keys($self->{entries})) {
+    foreach my $entry (keys(%{$self->{entries}})) {
       $manifest{$entry} = $self->{entries}->{$entry};
     }
 
