@@ -2,6 +2,8 @@ Revision history for Archive-BagIt
 
 
 {{$NEXT}}
+
+0.044     2014-04-30 09:06:20-04:00 America/Toronto
         Just fixed a bug that only really showed up in testing on older perls
         
 0.043     2014-04-29 11:37:16-04:00 America/Toronto 
