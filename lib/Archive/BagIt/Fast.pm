@@ -1,5 +1,6 @@
 package Archive::BagIt::Fast;
 
+use strict;
 use parent "Archive::BagIt";
 
 use IO::AIO;

@@ -12,11 +12,12 @@ Revision history for Archive-BagIt
         
 0.043     2014-04-29 11:37:16-04:00 America/Toronto 
 
-0.033   A blur, I didn't really update this, there is some stuff at github
+0.033   2014-04-01 09:00:00 America/Toronto
+        A blur, I didn't really update this, there is some stuff at github
 
-0.02    Tue  9 Oct 2012 22:42:44 EDT
+0.02    2012-10-9 22:42:44 EDT
         Added bagit.pl as a command-line interface
 
-0.01    Tue  2 Oct 2012 22:36:53 EDT
+0.01    2012-10-2 22:36:53 EDT
         First version, released on an unsuspecting world.
 

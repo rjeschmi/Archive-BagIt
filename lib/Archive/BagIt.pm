@@ -1,7 +1,7 @@
 package Archive::BagIt;
 
-use 5.006;
 use strict;
+use 5.006;
 use warnings;
 
 our @checksum_algos = qw(md5 sha1);
@@ -69,8 +69,8 @@ sub new {
 sub _open {
   my($self) = @_;
 
-  $self->_load_manifests(); 
-  $self->_load_tagmanifests(); 
+  $self->_load_manifests();
+  $self->_load_tagmanifests();
 
   return $self;
 }
