@@ -36,11 +36,11 @@ and I will endeavour to maintain compatibility with it.
 
 
     #construct bag in an existing directory
-    my $bag = Archive::BagIt->make_bag($bag_dir);
+    my $bag2 = Archive::BagIt->make_bag($bag_dir);
 
     # Validate a BagIt archive against its manifest
-    my $bag = Archive::BagIt->new($bag_dir);
-    $is_valid = $bag->verify_bag();
+    my $bag3 = Archive::BagIt->new($bag_dir);
+    my $is_valid = $bag3->verify_bag();
 
 
 
