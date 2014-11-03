@@ -3,6 +3,8 @@ package Archive::BagIt::Fast;
 use strict;
 use parent "Archive::BagIt";
 
+# VERSION
+
 use IO::AIO;
 use Time::HiRes qw(time);
 =head1 NAME
@@ -26,21 +28,15 @@ sub verify_bag {
     my $MMAP_MIN = $opts->{mmap_min} || 8000000;
     my %invalids;
     my @payload       = ();
-
-  
-
     die("$manifest_file is not a regular file") unless -f ($manifest_file);
     die("$payload_dir is not a directory") unless -d ($payload_dir);
-
     # Read the manifest file
     #print Dumper($self->{entries});
     foreach my $entry (keys($self->{entries})) {
       $manifest{$entry} = $self->{entries}->{$entry};
     }
-
     # Compile a list of payload files
     File::Find::find(sub{ push(@payload, $File::Find::name)  }, $payload_dir);
-
     # Evaluate each file against the manifest
     my $digestobj = new Digest::MD5;
     foreach my $file (@payload) {

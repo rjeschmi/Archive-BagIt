@@ -43,7 +43,7 @@ my $DST_BAG = File::Spec->catdir(@ROOT, 'dst_bag');
   copy($SRC_FILES."/2", $DST_BAG);
 
   my $bag = $Class->make_bag($DST_BAG);
-  
+
   ok ($bag,       "Object created");
   isa_ok ($bag,   $Class);
   my $result = $bag->verify_bag();

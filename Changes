@@ -2,6 +2,11 @@ Revision history for Archive-BagIt
 
 
 {{$NEXT}}
+  - Demoted Archive::BagIt::App to suggests while it is still broken
+  - Separated the bagit.pl script into a separate module to avoid MooseX::App::Cmd dep
+  - Added some more testing through Dist::Zilla, trying to improve code quality
+  - removed all bare filehandles (pretty significant change!)
+  - ran basic tests, but might need further testing...
 
 0.047     2014-10-14 15:24:15-04:00 America/Toronto (TRIAL RELEASE)
 
