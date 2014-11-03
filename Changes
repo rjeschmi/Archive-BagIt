@@ -2,6 +2,8 @@ Revision history for Archive-BagIt
 
 
 {{$NEXT}}
+
+0.048     2014-11-03
   - Demoted Archive::BagIt::App to suggests while it is still broken
   - Separated the bagit.pl script into a separate module to avoid MooseX::App::Cmd dep
   - Added some more testing through Dist::Zilla, trying to improve code quality
