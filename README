@@ -2,7 +2,7 @@ NAME
     Archive::BagIt
 
 VERSION
-    version 0.048
+    version 0.049
 
 SYNOPSIS
     This modules will hopefully help with the basic commands needed to

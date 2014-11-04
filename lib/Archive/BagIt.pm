@@ -269,6 +269,10 @@ sub verify_bag {
     die("$manifest_file is not a regular file") unless -f ($manifest_file);
     die("$payload_dir is not a directory") unless -d ($payload_dir);
 
+    unless ($self->version() > .96) {
+        die ("Bag Version is unsupported");
+    }
+
     # Read the manifest file
     #print Dumper($self->{entries});
     foreach my $entry (keys(%{$self->{entries}})) {
