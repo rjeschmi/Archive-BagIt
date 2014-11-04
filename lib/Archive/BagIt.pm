@@ -145,7 +145,7 @@ sub make_bag {
 sub _write_bagit {
     my($self, $bagit) = @_;
     open(my $BAGIT, ">", $bagit."/bagit.txt") or die("Can't open $bagit/bagit.txt for writing: $!");
-    print($BAGIT, "BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
+    print($BAGIT "BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
     close($BAGIT);
     return 1;
 }
