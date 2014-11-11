@@ -17,7 +17,7 @@ Revision history for Archive-BagIt
   - removed all bare filehandles (pretty significant change!)
   - ran basic tests, but might need further testing...
 
-0.047     2014-10-14 15:24:15-04:00 America/Toronto (TRIAL RELEASE)
+0.047-TRIAL     2014-10-14 15:24:15-04:00 America/Toronto (TRIAL RELEASE)
 
 0.045     2014-05-02 14:48:44-04:00 America/Toronto
 
