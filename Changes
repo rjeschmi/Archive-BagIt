@@ -2,12 +2,13 @@ Revision history for Archive-BagIt
 
 
 {{$NEXT}}
+  - Full Release 
 
-0.049     2014-11-04
+0.049-TRIAL     2014-11-04
   - Fixed a bug in the filehandle cleanup
   - Added a test in verify_bag for the version number (catches an empty bagit.txt)
 
-0.048     2014-11-03
+0.048-TRIAL     2014-11-03
   - Demoted Archive::BagIt::App to suggests while it is still broken
   - Separated the bagit.pl script into a separate module to avoid MooseX::App::Cmd dep
   - Added some more testing through Dist::Zilla, trying to improve code quality
