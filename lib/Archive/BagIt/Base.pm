@@ -6,6 +6,8 @@ use Data::Printer;
 use File::Find;
 use Digest::MD5;
 
+# VERSION 
+
 use Sub::Quote;
 use Moo;
 
@@ -32,18 +34,16 @@ has 'payload_path' => (
 );
 
 has 'checksum_algos' => (
-    is => 'lazy', #this could probably be ro
+    is => 'lazy',
 );
 
 has 'bag_version' => (
     is => 'lazy',
 );
 
-sub _build_checksum_algos {
-    my($self) = @_;
-    my @checksums = ( 'md5', 'sha1');
-    return \@checksums;
-}
+has 'bag_checksum' => (
+    is => 'lazy',
+);
 
 has 'manifest_files' => (
     is => 'lazy',
@@ -66,8 +66,29 @@ has 'payload_files' => (
 );
 
 has 'non_payload_files' => (
-
+    is=>'lazy',
 );
+
+around 'BUILDARGS' , sub {
+    my ($orig, $class, $bag_path) = @_;
+    return $class->$orig(bag_path=>$bag_path);
+};
+
+sub _build_checksum_algos {
+    my($self) = @_;
+    my $checksums = [ 'md5', 'sha1' ];
+    return $checksums;
+}
+
+sub _build_bag_checksum {
+  my($self) =@_;
+  my $bagit = $self->{'bag_path'};
+  open(my $SRCFILE, "<",  $bagit."/manifest-md5.txt");
+  binmode($SRCFILE);
+  my $srchex=Digest::MD5->new->addfile($SRCFILE)->hexdigest;
+  close($SRCFILE);
+  return $srchex;
+}
 
 sub _build_manifest_files {
   my($self) = @_;
@@ -166,6 +187,26 @@ sub _build_bag_version {
     return $1 || 0;
 }
 
+sub _build_non_payload_files {
+  my($self) = @_;
+
+  my @payload = ();
+  File::Find::find( sub {
+    if(-f $File::Find::name) {
+      my ($relpath) = ($File::Find::name=~m!$self->{"bag_path"}/(.*$)!);
+      push(@payload, $relpath);
+    }
+    elsif(-d _ && $_ eq "data") {
+      $File::Find::prune=1;
+    }
+    else {
+      #directories in the root other than data?
+    }
+  }, $self->{"bag_path"});
+
+  return @payload;
+
+}
 
 sub verify_bag {
     my ($self,$opts) = @_;
@@ -227,6 +268,109 @@ sub verify_bag {
     if (keys(%manifest)) { die ("Missing files in bag"); }
 
     return 1;
+}
+
+=head2 make_bag
+  A constructor that will make and return a bag from a direcory
+
+  If a data directory exists, assume it is already a bag (no checking for invalid files in root)
+
+=cut
+
+sub make_bag {
+  my ($class, $bag_path) = @_;
+  unless ( -d $bag_path) { die ( "source bag directory doesn't exist"); }
+  my $self = $class->new(bag_path=>$bag_path);
+  unless ( -d $self->payload_path) {
+    rename ($bag_dir, $bag_dir.".tmp");
+    mkdir  ($bag_dir);
+    rename ($bag_dir.".tmp", $self->payload_path);
+  }
+  unless ( -d $self->metadata_path) {
+    #metadata path is not the root path for some reason
+    mkdir ($self->metadata_path);
+  }
+  $self->_write_bagit();
+  $self->_write_baginfo();
+  $self->_manifest_md5();
+  $self->_tagmanifest_md5();
+  return $self;
+}
+
+sub _write_bagit {
+    my($self) = @_;
+    open(my $BAGIT, ">", $self->metadata_path."/bagit.txt") or die("Can't open $self->metadata_path/bagit.txt for writing: $!");
+    print($BAGIT "BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
+    close($BAGIT);
+    return 1;
+}
+
+sub _write_baginfo {
+    use POSIX;
+    my($self, %param) = @_;
+    open(my $BAGINFO, ">", $self->metadata_path."/bag-info.txt") or die("Can't open $self->metadata_path/bag-info.txt for writing: $!");
+    $param{'Bagging-Date'} = POSIX::strftime("%F", gmtime(time));
+    $param{'Bag-Software-Agent'} = 'Archive::BagIt <http://search.cpan.org/~rjeschmi/Archive-BagIt>';
+    while(my($key, $value) = each(%param)) {
+        print($BAGINFO "$key: $value\n");
+    }
+    close($BAGINFO);
+    return 1;
+}
+
+sub _write_manifest_md5 {
+    use Digest::MD5;
+    my($self) = @_;
+    my $manifest_file = $self->metadata_path."/manifest-md5.txt";
+    my $data_dir = $self->payload_path;
+    print "creating manifest: $data_dir\n";
+    # Generate MD5 digests for all of the files under ./data
+    open(my $md5_fh, ">",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
+    find(
+        sub {
+            my $file = $File::Find::name;
+            if (-f $_) {
+                open(my $DATA, "<", "$_") or die("Cannot read $_: $!");
+                my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
+                close($DATA);
+                my $filename = substr($file, length($bagit) + 1);
+                print($md5_fh "$digest  $filename\n");
+                #print "lineout: $digest $filename\n";
+            }
+        },
+        $data_dir
+    );
+    close($md5_fh);
+}
+
+sub _tagmanifest_md5 {
+  my ($self) = @_;
+
+  use Digest::MD5;
+
+  my $tagmanifest_file= $self->metadata_path."/tagmanifest-md5.txt";
+
+  open (my $md5_fh, ">", $tagmanifest_file) or die ("Cannot create tagmanifest-md5.txt: $! \n");
+
+  find (
+    sub {
+      my $file = $File::Find::name;
+      if ($_=~m/^data$/) {
+        $File::Find::prune=1;
+      }
+      elsif ($_=~m/^tagmanifest-.*\.txt/) {
+        # Ignore, we can't take digest from ourselves
+      }
+      elsif ( -f $_ ) {
+        open(my $DATA, "<", "$_") or die("Cannot read $_: $!");
+        my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
+        close($DATA);
+        my $filename = substr($file, length($self->metadata_path) + 1);
+        print($md5_fh "$digest  $filename\n");
+      }
+  }, $bagit);
+
+  close($md5_fh);
 }
 
 1;
