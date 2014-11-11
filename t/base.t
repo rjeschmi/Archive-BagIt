@@ -32,8 +32,10 @@ my $DST_BAG = File::Spec->catdir(@ROOT, 'dst_bag');
   ok($bag,        "Object created");
   isa_ok ($bag,   $Class);
 
-  p $bag->checksum_algos;
-  p $bag->manifest_files;
+  print "checksum algos:".p $bag->checksum_algos;
+  print "manifest files:".p $bag->manifest_files;
+  print "bag path:".p $bag->bag_path;
+  print "metadata path: ".p $bag->metadata_path;
   p $bag->tagmanifest_files;
   p $bag->manifest_entries;
   p $bag->tagmanifest_entries;
@@ -54,7 +56,7 @@ my $DST_BAG = File::Spec->catdir(@ROOT, 'dst_bag');
   my $result = $bag->verify_bag();
   ok($result,     "Bag verifies");
 
-  rmtree($DST_BAG);
+  #rmtree($DST_BAG);
 }
 
 {

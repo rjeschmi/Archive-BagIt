@@ -70,8 +70,14 @@ has 'non_payload_files' => (
 );
 
 around 'BUILDARGS' , sub {
-    my ($orig, $class, $bag_path) = @_;
-    return $class->$orig(bag_path=>$bag_path);
+    my $orig = shift;
+    my $class = shift;
+    if (@_ == 1 && !ref $_[0]) {
+        return $class->$orig(bag_path=>$_[0]);
+    }
+    else {
+        return $class->$orig(@_);
+    }
 };
 
 sub _build_checksum_algos {
@@ -93,7 +99,7 @@ sub _build_bag_checksum {
 sub _build_manifest_files {
   my($self) = @_;
   my @manifest_files;
-  p $self->checksum_algos;
+  #p $self->checksum_algos;
   foreach my $algo (@{$self->checksum_algos}) {
     my $manifest_file = $self->metadata_path."/manifest-$algo.txt";
     if (-f $manifest_file) {
@@ -167,11 +173,22 @@ sub _build_payload_files{
 
   my @payload=();
   File::Find::find( sub{
-    push(@payload,$File::Find::name);
-    #print "name: ".$File::Find::name."\n";
+    if (-f $File::Find::name) {
+        push(@payload,$File::Find::name);
+    }
+    elsif(-d _ && $_ eq $self->metadata_path) {
+        $File::Find::prune=1;
+    }
+    else {
+
+    }
+    print "name: ".$File::Find::name."\n";
   }, $payload_dir);
 
-  return @payload;
+    print p(@payload);
+
+  return wantarray ? @payload : \@payload;
+
 
 }
 
@@ -217,7 +234,7 @@ sub verify_bag {
     my $payload_dir   = $self->payload_path;
     my $return_all_errors = $opts->{return_all_errors};
     my %invalids;
-    my @payload       = ();
+    my @payload       = @{$self->payload_files};
 
     die("$manifest_file is not a regular file") unless -f ($manifest_file);
     die("$payload_dir is not a directory") unless -d ($payload_dir);
@@ -231,7 +248,7 @@ sub verify_bag {
     my %manifest = %{$self->manifest_entries};
 
     # Compile a list of payload files
-    find(sub{ push(@payload, $File::Find::name)  }, $payload_dir);
+    
 
     # Evaluate each file against the manifest
     my $digestobj = new Digest::MD5;
@@ -265,7 +282,7 @@ sub verify_bag {
       die ("bag verify failed with invalid files");
     }
     # Make sure there are no missing files
-    if (keys(%manifest)) { die ("Missing files in bag"); }
+    if (keys(%manifest)) { die ("Missing files in bag".p(%manifest)); }
 
     return 1;
 }
@@ -282,9 +299,9 @@ sub make_bag {
   unless ( -d $bag_path) { die ( "source bag directory doesn't exist"); }
   my $self = $class->new(bag_path=>$bag_path);
   unless ( -d $self->payload_path) {
-    rename ($bag_dir, $bag_dir.".tmp");
-    mkdir  ($bag_dir);
-    rename ($bag_dir.".tmp", $self->payload_path);
+    rename ($bag_path, $bag_path.".tmp");
+    mkdir  ($bag_path);
+    rename ($bag_path.".tmp", $self->payload_path);
   }
   unless ( -d $self->metadata_path) {
     #metadata path is not the root path for some reason
@@ -292,8 +309,8 @@ sub make_bag {
   }
   $self->_write_bagit();
   $self->_write_baginfo();
-  $self->_manifest_md5();
-  $self->_tagmanifest_md5();
+  $self->_write_manifest_md5();
+  $self->_write_tagmanifest_md5();
   return $self;
 }
 
@@ -333,7 +350,7 @@ sub _write_manifest_md5 {
                 open(my $DATA, "<", "$_") or die("Cannot read $_: $!");
                 my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
                 close($DATA);
-                my $filename = substr($file, length($bagit) + 1);
+                my $filename = substr($file, length($self->bag_path) + 1);
                 print($md5_fh "$digest  $filename\n");
                 #print "lineout: $digest $filename\n";
             }
@@ -343,7 +360,7 @@ sub _write_manifest_md5 {
     close($md5_fh);
 }
 
-sub _tagmanifest_md5 {
+sub _write_tagmanifest_md5 {
   my ($self) = @_;
 
   use Digest::MD5;
@@ -368,7 +385,7 @@ sub _tagmanifest_md5 {
         my $filename = substr($file, length($self->metadata_path) + 1);
         print($md5_fh "$digest  $filename\n");
       }
-  }, $bagit);
+  }, $self->bag_path);
 
   close($md5_fh);
 }
