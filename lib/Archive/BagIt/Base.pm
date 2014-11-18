@@ -2,9 +2,12 @@ use strict;
 use warnings;
 
 package Archive::BagIt::Base;
-use Data::Printer;
+
 use File::Find;
+use File::Spec;
 use Digest::MD5;
+
+use Data::Printer;
 
 # VERSION 
 
@@ -23,14 +26,34 @@ has 'bag_path' => (
     is => 'rw',
 );
 
+has 'bag_path_arr' => (
+    is => 'lazy',
+);
+
 has 'metadata_path' => (
     is=> 'rw',
     default => sub { my ($self) = @_; return $self->bag_path; },
 );
 
+has 'metadata_path_arr' => (
+    is =>'lazy',
+);
+
+has 'rel_metadata_path' => (
+    is => 'lazy',
+);
+
 has 'payload_path' => (
     is => 'rw',
     default => sub { my ($self) = @_; return $self->bag_path."/data"; },
+);
+
+has 'payload_path_arr' => (
+    is => 'lazy',
+);
+
+has 'rel_payload_path' => (
+    is => 'lazy',
 );
 
 has 'checksum_algos' => (
@@ -79,6 +102,36 @@ around 'BUILDARGS' , sub {
         return $class->$orig(@_);
     }
 };
+
+sub _build_bag_path_arr {
+    my ($self) = @_;
+    my @split_path = File::Spec->splitdir($self->bag_path);
+    return @split_path; 
+}
+
+sub _build_payload_path_arr {
+    my ($self) = @_;
+    my @split_path = File::Spec->splitdir($self->payload_path);
+    return @split_path;
+}
+
+sub _build_rel_payload_path {
+    my ($self) = @_; 
+    my $rel_path = File::Spec->abs2rel( $self->payload_path, $self->bag_path ) ;
+    return $rel_path;
+}
+
+sub _build_metadata_path_arr {
+    my ($self) = @_;
+    my @split_path = File::Spec->splitdir($self->metadata_path);
+    return @split_path;
+}
+
+sub _build_rel_metadata_path {
+    my ($self) = @_; 
+    my $rel_path = File::Spec->abs2rel( $self->metadata_path, $self->bag_path ) ;
+    return $rel_path;
+}
 
 sub _build_checksum_algos {
     my($self) = @_;
@@ -173,22 +226,25 @@ sub _build_payload_files{
 
   my @payload=();
   File::Find::find( sub{
-    if (-f $File::Find::name) {
-        push(@payload,$File::Find::name);
+    if (-f $_) {
+        my $rel_path=File::Spec->catdir($self->rel_payload_path,File::Spec->abs2rel($File::Find::name, $payload_dir));
+        #print "pushing ".$rel_path." payload_dir: $payload_dir \n";
+        push(@payload,$rel_path);
     }
-    elsif(-d _ && $_ eq $self->metadata_path) {
+    elsif($self->metadata_path_arr > $self->payload_path_arr && -d _ && $_ eq $self->rel_metadata_path) {
+        #print "pruning ".$File::Find::name."\n";
         $File::Find::prune=1;
     }
     else {
-
+        #payload directories
     }
-    print "name: ".$File::Find::name."\n";
+    #print "name: ".$File::Find::name."\n";
   }, $payload_dir);
 
-    print p(@payload);
+  #print p(@payload);
 
   return wantarray ? @payload : \@payload;
-
+  
 
 }
 
@@ -207,21 +263,25 @@ sub _build_bag_version {
 sub _build_non_payload_files {
   my($self) = @_;
 
-  my @payload = ();
-  File::Find::find( sub {
-    if(-f $File::Find::name) {
-      my ($relpath) = ($File::Find::name=~m!$self->{"bag_path"}/(.*$)!);
-      push(@payload, $relpath);
+  my @non_payload = ();
+
+  File::Find::find( sub{
+    if (-f $_) {
+        my $rel_path=File::Spec->catdir($self->rel_metadata_path,File::Spec->abs2rel($File::Find::name, $self->metadata_path));
+        #print "pushing ".$rel_path." payload_dir: $payload_dir \n";
+        push(@non_payload,$rel_path);
     }
-    elsif(-d _ && $_ eq "data") {
-      $File::Find::prune=1;
+    elsif($self->metadata_path_arr < $self->payload_path_arr && -d _ && $_ eq $self->rel_payload_path) {
+        #print "pruning ".$File::Find::name."\n";
+        $File::Find::prune=1;
     }
     else {
-      #directories in the root other than data?
+        #payload directories
     }
-  }, $self->{"bag_path"});
+    #print "name: ".$File::Find::name."\n";
+  }, $self->metadata_path);
 
-  return @payload;
+  return wantarray ? @non_payload : \@non_payload;
 
 }
 
@@ -246,23 +306,19 @@ sub verify_bag {
     # Read the manifest file
     #print Dumper($self->{entries});
     my %manifest = %{$self->manifest_entries};
-
-    # Compile a list of payload files
     
 
     # Evaluate each file against the manifest
     my $digestobj = new Digest::MD5;
-    foreach my $file (@payload) {
-        next if (-d ($file));
-        my $local_name = substr($file, length($bagit) + 1);
+    foreach my $local_name (@payload) {
         my ($digest);
         unless ($manifest{$local_name}) {
           die ("file found not in manifest: [$local_name]");
         }
-        #my $start_time=time();
+        my $start_time=time();
         open(my $fh, "<", "$bagit/$local_name") or die ("Cannot open $local_name");
         $digest = $digestobj->addfile($fh)->hexdigest;
-        print $digest."\n";
+        #print $digest."\n";
         close($fh);
         #print "$bagit/$local_name md5 in ".(time()-$start_time)."\n";
         unless ($digest eq $manifest{$local_name}) {
@@ -340,23 +396,18 @@ sub _write_manifest_md5 {
     my($self) = @_;
     my $manifest_file = $self->metadata_path."/manifest-md5.txt";
     my $data_dir = $self->payload_path;
-    print "creating manifest: $data_dir\n";
+    #print "creating manifest: $data_dir\n";
     # Generate MD5 digests for all of the files under ./data
     open(my $md5_fh, ">",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
-    find(
-        sub {
-            my $file = $File::Find::name;
-            if (-f $_) {
-                open(my $DATA, "<", "$_") or die("Cannot read $_: $!");
-                my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
-                close($DATA);
-                my $filename = substr($file, length($self->bag_path) + 1);
-                print($md5_fh "$digest  $filename\n");
-                #print "lineout: $digest $filename\n";
-            }
-        },
-        $data_dir
-    );
+    foreach my $rel_payload_file (@{$self->payload_files}) {
+        #print "rel_payload_file: ".$rel_payload_file;
+        my $payload_file = File::Spec->catdir($self->bag_path, $rel_payload_file);
+        open(my $DATA, "<", "$payload_file") or die("Cannot read $payload_file: $!");
+        my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
+        close($DATA);
+        print($md5_fh "$digest  $rel_payload_file\n");
+        #print "lineout: $digest $filename\n";
+    } 
     close($md5_fh);
 }
 
@@ -369,23 +420,21 @@ sub _write_tagmanifest_md5 {
 
   open (my $md5_fh, ">", $tagmanifest_file) or die ("Cannot create tagmanifest-md5.txt: $! \n");
 
-  find (
-    sub {
-      my $file = $File::Find::name;
-      if ($_=~m/^data$/) {
-        $File::Find::prune=1;
-      }
-      elsif ($_=~m/^tagmanifest-.*\.txt/) {
+  foreach my $rel_nonpayload_file (@{$self->non_payload_files}) {
+      my $nonpayload_file = File::Spec->catdir($self->bag_path, $rel_nonpayload_file);
+      if ($rel_nonpayload_file=~m/tagmanifest-.*\.txt$/) {
         # Ignore, we can't take digest from ourselves
       }
-      elsif ( -f $_ ) {
-        open(my $DATA, "<", "$_") or die("Cannot read $_: $!");
+      elsif ( -f $nonpayload_file && $nonpayload_file=~m/.*\.txt$/) {
+        open(my $DATA, "<", "$nonpayload_file") or die("Cannot read $_: $!");
         my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
         close($DATA);
-        my $filename = substr($file, length($self->metadata_path) + 1);
-        print($md5_fh "$digest  $filename\n");
+        print($md5_fh "$digest  $rel_nonpayload_file\n");
       }
-  }, $self->bag_path);
+      else {
+        die("A file or directory that doesn't match: $rel_nonpayload_file");
+      }
+  }
 
   close($md5_fh);
 }

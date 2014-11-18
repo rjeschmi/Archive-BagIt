@@ -8,7 +8,6 @@ use strict;
 use lib '../lib';
 
 use File::Spec;
-use Data::Printer;
 use File::Path;
 use File::Copy;
 
@@ -17,7 +16,8 @@ use_ok($Class);
 
 my @ROOT = grep {length} 'src','dotbagit';
 
-warn "what is this: ".p(@ROOT);
+note( "What is ROOT:");
+note (explain(@ROOT));
 
 
 my $SRC_BAG = File::Spec->catdir( @ROOT, 'src_bag');
@@ -32,14 +32,14 @@ my $DST_BAG = File::Spec->catdir(@ROOT, 'dst_bag');
   ok($bag,        "Object created");
   isa_ok ($bag,   $Class);
 
-  print "checksum algos:".p $bag->checksum_algos;
-  print "manifest files:".p $bag->manifest_files;
-  print "bag path:".p $bag->bag_path;
-  print "metadata path: ".p $bag->metadata_path;
-  p $bag->tagmanifest_files;
-  p $bag->manifest_entries;
-  p $bag->tagmanifest_entries;
-  print "payload files".p $bag->payload_files;
+  note "checksum algos:"; note explain($bag->checksum_algos);
+  note "manifest files:"; note explain $bag->manifest_files;
+  note "bag path:"; note explain $bag->bag_path;
+  note "metadata path: "; note explain $bag->metadata_path;
+  note "tagmanifest_files: "; note explain $bag->tagmanifest_files;
+  note "manifest_entries: ";note explain $bag->manifest_entries;
+  note "tagmanifest_entries: ";note explain $bag->tagmanifest_entries;
+  note "payload files: "; note explain $bag->payload_files;
 
   my $result = $bag->verify_bag;
   ok($result,     "Bag verifies");
@@ -57,7 +57,7 @@ my $DST_BAG = File::Spec->catdir(@ROOT, 'dst_bag');
   my $result = $bag->verify_bag();
   ok($result,     "Bag verifies");
 
-  #rmtree($DST_BAG);
+  rmtree($DST_BAG);
 }
 
 {
