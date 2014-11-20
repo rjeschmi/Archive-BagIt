@@ -2,6 +2,8 @@ Revision history for Archive-BagIt
 
 
 {{$NEXT}}
+  - Significant changes to create a base clase
+  - DotBagIt class now available for an app
 
 0.050     2014-11-10
   - Full Release 
