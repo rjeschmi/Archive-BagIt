@@ -92,6 +92,11 @@ has 'non_payload_files' => (
     is=>'lazy',
 );
 
+=head2 BUILDARGS
+
+The constructor sub, will create a bag with a single argument
+=cut
+
 around 'BUILDARGS' , sub {
     my $orig = shift;
     my $class = shift;
@@ -116,7 +121,7 @@ sub _build_payload_path_arr {
 }
 
 sub _build_rel_payload_path {
-    my ($self) = @_; 
+    my ($self) = @_;
     my $rel_path = File::Spec->abs2rel( $self->payload_path, $self->bag_path ) ;
     return $rel_path;
 }
@@ -128,7 +133,7 @@ sub _build_metadata_path_arr {
 }
 
 sub _build_rel_metadata_path {
-    my ($self) = @_; 
+    my ($self) = @_;
     my $rel_path = File::Spec->abs2rel( $self->metadata_path, $self->bag_path ) ;
     return $rel_path;
 }
@@ -244,7 +249,6 @@ sub _build_payload_files{
   #print p(@payload);
 
   return wantarray ? @payload : \@payload;
-  
 
 }
 
@@ -285,6 +289,15 @@ sub _build_non_payload_files {
 
 }
 
+=head2 verify_bag
+
+An interface to verify a bag.
+
+You might also want to check Archive::BagIt::Fast to see a more direct way of accessing files (and thus faster).
+
+
+=cut
+
 sub verify_bag {
     my ($self,$opts) = @_;
     #removed the ability to pass in a bag in the parameters, but might want options
@@ -306,7 +319,6 @@ sub verify_bag {
     # Read the manifest file
     #print Dumper($self->{entries});
     my %manifest = %{$self->manifest_entries};
-    
 
     # Evaluate each file against the manifest
     my $digestobj = new Digest::MD5;
@@ -395,8 +407,6 @@ sub _write_manifest_md5 {
     use Digest::MD5;
     my($self) = @_;
     my $manifest_file = $self->metadata_path."/manifest-md5.txt";
-    my $data_dir = $self->payload_path;
-    #print "creating manifest: $data_dir\n";
     # Generate MD5 digests for all of the files under ./data
     open(my $md5_fh, ">",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
     foreach my $rel_payload_file (@{$self->payload_files}) {
@@ -407,7 +417,7 @@ sub _write_manifest_md5 {
         close($DATA);
         print($md5_fh "$digest  $rel_payload_file\n");
         #print "lineout: $digest $filename\n";
-    } 
+    }
     close($md5_fh);
 }
 
