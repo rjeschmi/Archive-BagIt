@@ -327,12 +327,10 @@ sub verify_bag {
         unless ($manifest{$local_name}) {
           die ("file found not in manifest: [$local_name]");
         }
-        my $start_time=time();
         open(my $fh, "<", "$bagit/$local_name") or die ("Cannot open $local_name");
         $digest = $digestobj->addfile($fh)->hexdigest;
         #print $digest."\n";
         close($fh);
-        #print "$bagit/$local_name md5 in ".(time()-$start_time)."\n";
         unless ($digest eq $manifest{$local_name}) {
           if($return_all_errors) {
             $invalids{$local_name} = $digest;
