@@ -106,7 +106,7 @@ around 'BUILDARGS' , sub {
 sub _build_bag_path_arr {
     my ($self) = @_;
     my @split_path = File::Spec->splitdir($self->bag_path);
-    return @split_path; 
+    return @split_path;
 }
 
 sub _build_payload_path_arr {
