@@ -9,7 +9,7 @@ use Digest::MD5;
 
 use Data::Printer;
 
-# VERSION 
+# VERSION
 
 use Sub::Quote;
 use Moo;
@@ -200,7 +200,7 @@ sub _build_manifest_entries {
   my @manifests = @{$self->manifest_files};
   my $manifest_entries = {};
   foreach my $manifest_file (@manifests) {
-    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST, $manifest_file));
+    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST, "<", $manifest_file));
     while (my $line = <$MANIFEST>) {
         chomp($line);
         my ($digest,$file);
