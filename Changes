@@ -2,6 +2,7 @@ Revision history for Archive-BagIt
 
 
 {{$NEXT}}
+  - Fixed dist.ini to include dotfiles (needed for dotbagit test)
 
 0.051     2014-11-19
   - Significant changes to create a base clase
