@@ -8,3 +8,4 @@ Archive-BagIt*
 Build.PL
 Makefile.PL
 .build
+.*.swp

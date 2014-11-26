@@ -353,6 +353,30 @@ sub verify_bag {
     return 1;
 }
 
+=head2 init_metadata
+  A constructor that will just create the metadata directory
+
+  This won't make a bag, but it will create the conditions to do that eventually
+
+=cut
+
+sub init_metadata {
+    my ($class, $bag_path) = @_;
+    unless ( -d $bag_path) { die ( "source bag directory doesn't exist"); }
+    my $self = $class->new(bag_path=>$bag_path);
+    unless ( -d $self->payload_path) {
+        rename ($bag_path, $bag_path.".tmp");
+        mkdir  ($bag_path);
+        rename ($bag_path.".tmp", $self->payload_path);
+    }
+    unless ( -d $self->metadata_path) {
+        #metadata path is not the root path for some reason
+        mkdir ($self->metadata_path);
+    }
+    $self->_write_bagit();
+    $self->_write_baginfo();
+    return $self;
+}
 =head2 make_bag
   A constructor that will make and return a bag from a direcory
 
@@ -362,19 +386,7 @@ sub verify_bag {
 
 sub make_bag {
   my ($class, $bag_path) = @_;
-  unless ( -d $bag_path) { die ( "source bag directory doesn't exist"); }
-  my $self = $class->new(bag_path=>$bag_path);
-  unless ( -d $self->payload_path) {
-    rename ($bag_path, $bag_path.".tmp");
-    mkdir  ($bag_path);
-    rename ($bag_path.".tmp", $self->payload_path);
-  }
-  unless ( -d $self->metadata_path) {
-    #metadata path is not the root path for some reason
-    mkdir ($self->metadata_path);
-  }
-  $self->_write_bagit();
-  $self->_write_baginfo();
+  my $self = $class->init_metadata($bag_path);
   $self->_write_manifest_md5();
   $self->_write_tagmanifest_md5();
   return $self;

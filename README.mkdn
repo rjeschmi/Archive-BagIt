@@ -4,7 +4,7 @@ Archive::BagIt
 
 # VERSION
 
-version 0.052
+version 0.053
 
 # SYNOPSIS
 
