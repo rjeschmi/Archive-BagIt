@@ -92,6 +92,17 @@ has 'non_payload_files' => (
     is=>'lazy',
 );
 
+has 'plugins' => (
+    is=>'rw',
+    isa=>'ArrayRef[Archive::BagIt::Role::Plugin]',
+);
+
+has 'algo' => (
+    is=>'rw',
+    isa=>'HashRef[Archive::BagIt::Role::Algorithm]',
+
+);
+
 =head2 BUILDARGS
 
 The constructor sub, will create a bag with a single argument

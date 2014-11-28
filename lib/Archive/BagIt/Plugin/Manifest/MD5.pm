@@ -2,9 +2,12 @@ use strict;
 use warnings;
 
 #ABSTRACT: The md5 plugin (default)
-package Archive::BagIt::Plugins::Manifest::MD5;
+package Archive::BagIt::Plugin::Manifest::MD5;
 
-use Moo;
+use Moose;
+with 'Archive::BagIt::Role::Manifest';
+
+
 use Digest::MD5;
 use Sub::Quote;
 
