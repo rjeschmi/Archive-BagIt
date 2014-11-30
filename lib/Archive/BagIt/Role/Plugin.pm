@@ -14,7 +14,7 @@ has plugin_name => (
 
 has bagit => (
   is  => 'ro',
-  isa => class_type('Archive::BagIt'),
+  isa => 'Archive::BagIt::Base',
   required => 1,
   weak_ref => 1,
 );

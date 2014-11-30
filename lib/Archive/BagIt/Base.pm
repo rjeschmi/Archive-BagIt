@@ -3,16 +3,18 @@ use warnings;
 
 package Archive::BagIt::Base;
 
+use Moose;
+
+
 use File::Find;
 use File::Spec;
 use Digest::MD5;
-
+use Class::Load qw(load_class);
 use Data::Printer;
 
 # VERSION
 
 use Sub::Quote;
-use Moo;
 
 my $DEBUG=0;
 
@@ -27,7 +29,9 @@ has 'bag_path' => (
 );
 
 has 'bag_path_arr' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_bag_path_arr',
 );
 
 has 'metadata_path' => (
@@ -36,11 +40,15 @@ has 'metadata_path' => (
 );
 
 has 'metadata_path_arr' => (
-    is =>'lazy',
+    is =>'ro',
+    lazy => 1,
+    builder => '_build_metadata_path_arr',
 );
 
 has 'rel_metadata_path' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_rel_metadata_path',
 );
 
 has 'payload_path' => (
@@ -49,57 +57,79 @@ has 'payload_path' => (
 );
 
 has 'payload_path_arr' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_payload_path_arr',
 );
 
 has 'rel_payload_path' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_rel_payload_path',
 );
 
 has 'checksum_algos' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_checksum_algos',
 );
 
 has 'bag_version' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_bag_version',
 );
 
 has 'bag_checksum' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_bag_checksum',
 );
 
 has 'manifest_files' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_manifest_files',
 );
 
 has 'tagmanifest_files' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_tagmanifest_files',
 );
 
 has 'manifest_entries' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_manifest_entries',
 );
 
 has 'tagmanifest_entries' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_tagmanifest_entries',
 );
 
 has 'payload_files' => (
-    is => 'lazy',
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_payload_files',
 );
 
 has 'non_payload_files' => (
-    is=>'lazy',
+    is=>'ro',
+    lazy => 1,
+    builder => '_build_non_payload_files',
 );
 
 has 'plugins' => (
     is=>'rw',
-    isa=>'ArrayRef[Archive::BagIt::Role::Plugin]',
+    isa=>'HashRef',
 );
 
 has 'algo' => (
     is=>'rw',
-    isa=>'HashRef[Archive::BagIt::Role::Algorithm]',
+    isa=>'HashRef',
 
 );
 
@@ -119,6 +149,10 @@ around 'BUILDARGS' , sub {
     }
 };
 
+sub BUILD {
+    my ($self, $args) = @_;
+    $self->load_plugins(("Archive::BagIt::Plugin::Manifest::MD5"));
+}
 sub _build_bag_path_arr {
     my ($self) = @_;
     my @split_path = File::Spec->splitdir($self->bag_path);
@@ -300,6 +334,21 @@ sub _build_non_payload_files {
 
 }
 
+sub load_plugins {
+    my ($self, @plugins) = @_;
+ 
+    p(@plugins); 
+    my $loaded_plugins = $self->plugins;  
+    @plugins = grep { not exists $loaded_plugins->{$_} } @plugins; 
+
+    return if @plugins == 0;
+    foreach my $plugin (@plugins) {
+        load_class ($plugin) or die ("Can't load $plugin");
+        $plugin->register_plugin($self);
+    }
+
+    return 1;
+}
 =head2 verify_bag
 
 An interface to verify a bag.

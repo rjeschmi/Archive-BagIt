@@ -11,7 +11,7 @@ use namespace::autoclean;
 with 'Archive::BagIt::Role::Algorithm';
 
 has 'name' => ( 
-    is => ro,
+    is => 'ro',
     isa => 'Str',
     default => 'md5',
 );
@@ -19,6 +19,7 @@ has 'name' => (
 has '_digest_md5' => (
     is => 'ro',
     lazy => 1,
+    builder => '_build_digest_md5',
     init_arg => undef,
 );
 

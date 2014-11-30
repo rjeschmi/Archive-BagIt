@@ -6,10 +6,11 @@ use warnings;
 
 package Archive::BagIt::Role::Algorithm;
 
-use Moose;
 use Moose::Role;
 
-has 'name' => ( );
+has 'name' => (
+    is => 'ro',
+);
 
 sub get_hash_string {
     my ($self, $fh) = @_;

@@ -10,13 +10,20 @@ with 'Archive::BagIt::Role::Manifest';
 
 use Digest::MD5;
 use Sub::Quote;
+has 'plugin_name' => (
+    is => 'ro',
+    default => 'Archive::BagIt::Plugin::Manifest::MD5',
+);
+has 'manifest_path' => (
+    is => 'ro',
+);
 
-has 'manifest_path';
-
-has 'manifest_files';
+has 'manifest_files' => (
+    is => 'ro',
+);
 
 has 'algorithm' => (
-    is => ro,
+    is => 'ro',
     default=> quote_sub(q{ return 'md5';}),
 );
 

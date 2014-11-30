@@ -7,7 +7,10 @@ with 'Archive::BagIt::Role::Plugin';
 
 use namespace::autoclean;
 
+use Data::Printer;
+
 has 'algorithm' => (
+    is => 'rw',
     isa => 'Archive::BagIt::Role::Algorithm',
 );
 
@@ -24,16 +27,16 @@ sub manifest {
 
 }
 
-sub manifest_files {
-
-}
 
 sub register_plugin {
     my ($class, $bagit) = @_;
     
     my $self = $class->new({bagit=>$bagit});
-    push $self->bagit->plugins, $self;
-    $self->bagit->algo->{$self->algorithm} = $self;
+    my $plugin_name = $self->plugin_name;
+    p ($self);
+    $self->bagit->plugins( { $plugin_name => $self });
+    $self->bagit->algo( {$self->algorithm => $self });
 
 }
+
 1;
