@@ -10,6 +10,11 @@ use namespace::autoclean;
 
 with 'Archive::BagIt::Role::Algorithm';
 
+has 'plugin_name' => (
+    is => 'ro',
+    default => 'Archive::BagIt::Plugin::Algorithm::MD5',
+);
+
 has 'name' => ( 
     is => 'ro',
     isa => 'Str',

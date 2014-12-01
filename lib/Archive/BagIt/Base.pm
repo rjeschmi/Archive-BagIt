@@ -35,9 +35,16 @@ has 'bag_path_arr' => (
 );
 
 has 'metadata_path' => (
-    is=> 'rw',
-    default => sub { my ($self) = @_; return $self->bag_path; },
+    is=> 'ro',
+    lazy => 1,
+    builder => '_build_metadata_path',
 );
+
+sub _build_metadata_path { 
+    my ($self) = @_; 
+    return $self->bag_path; 
+}
+
 
 has 'metadata_path_arr' => (
     is =>'ro',
@@ -52,9 +59,15 @@ has 'rel_metadata_path' => (
 );
 
 has 'payload_path' => (
-    is => 'rw',
-    default => sub { my ($self) = @_; return $self->bag_path."/data"; },
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_payload_path',
 );
+
+sub _build_payload_path { 
+    my ($self) = @_; 
+    return $self->bag_path."/data"; 
+}
 
 has 'payload_path_arr' => (
     is => 'ro',
@@ -127,7 +140,12 @@ has 'plugins' => (
     isa=>'HashRef',
 );
 
-has 'algo' => (
+has 'manifests' => (
+    is=>'rw',
+    isa=>'HashRef',
+);
+
+has 'algos' => (
     is=>'rw',
     isa=>'HashRef',
 
@@ -433,8 +451,8 @@ sub init_metadata {
         #metadata path is not the root path for some reason
         mkdir ($self->metadata_path);
     }
-    $self->_write_bagit();
-    $self->_write_baginfo();
+    $self->manifests->{"md5"}->create_bagit();
+    $self->manifests->{"md5"}->create_baginfo();
     return $self;
 }
 =head2 make_bag
@@ -447,76 +465,10 @@ sub init_metadata {
 sub make_bag {
   my ($class, $bag_path) = @_;
   my $self = $class->init_metadata($bag_path);
-  $self->_write_manifest_md5();
-  $self->_write_tagmanifest_md5();
+  $self->manifests->{"md5"}->create_manifest();
+  $self->manifests->{"md5"}->create_tagmanifest();
   return $self;
 }
 
-sub _write_bagit {
-    my($self) = @_;
-    open(my $BAGIT, ">", $self->metadata_path."/bagit.txt") or die("Can't open $self->metadata_path/bagit.txt for writing: $!");
-    print($BAGIT "BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
-    close($BAGIT);
-    return 1;
-}
-
-sub _write_baginfo {
-    use POSIX;
-    my($self, %param) = @_;
-    open(my $BAGINFO, ">", $self->metadata_path."/bag-info.txt") or die("Can't open $self->metadata_path/bag-info.txt for writing: $!");
-    $param{'Bagging-Date'} = POSIX::strftime("%F", gmtime(time));
-    $param{'Bag-Software-Agent'} = 'Archive::BagIt <http://search.cpan.org/~rjeschmi/Archive-BagIt>';
-    while(my($key, $value) = each(%param)) {
-        print($BAGINFO "$key: $value\n");
-    }
-    close($BAGINFO);
-    return 1;
-}
-
-sub _write_manifest_md5 {
-    use Digest::MD5;
-    my($self) = @_;
-    my $manifest_file = $self->metadata_path."/manifest-md5.txt";
-    # Generate MD5 digests for all of the files under ./data
-    open(my $md5_fh, ">",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
-    foreach my $rel_payload_file (@{$self->payload_files}) {
-        #print "rel_payload_file: ".$rel_payload_file;
-        my $payload_file = File::Spec->catdir($self->bag_path, $rel_payload_file);
-        open(my $DATA, "<", "$payload_file") or die("Cannot read $payload_file: $!");
-        my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
-        close($DATA);
-        print($md5_fh "$digest  $rel_payload_file\n");
-        #print "lineout: $digest $filename\n";
-    }
-    close($md5_fh);
-}
-
-sub _write_tagmanifest_md5 {
-  my ($self) = @_;
-
-  use Digest::MD5;
-
-  my $tagmanifest_file= $self->metadata_path."/tagmanifest-md5.txt";
-
-  open (my $md5_fh, ">", $tagmanifest_file) or die ("Cannot create tagmanifest-md5.txt: $! \n");
-
-  foreach my $rel_nonpayload_file (@{$self->non_payload_files}) {
-      my $nonpayload_file = File::Spec->catdir($self->bag_path, $rel_nonpayload_file);
-      if ($rel_nonpayload_file=~m/tagmanifest-.*\.txt$/) {
-        # Ignore, we can't take digest from ourselves
-      }
-      elsif ( -f $nonpayload_file && $nonpayload_file=~m/.*\.txt$/) {
-        open(my $DATA, "<", "$nonpayload_file") or die("Cannot read $_: $!");
-        my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
-        close($DATA);
-        print($md5_fh "$digest  $rel_nonpayload_file\n");
-      }
-      else {
-        die("A file or directory that doesn't match: $rel_nonpayload_file");
-      }
-  }
-
-  close($md5_fh);
-}
 
 1;
