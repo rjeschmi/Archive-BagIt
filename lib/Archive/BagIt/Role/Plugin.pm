@@ -9,7 +9,7 @@ use namespace::autoclean;
 has plugin_name => (
   is  => 'ro',
   isa => 'Str',
-  required => 1,
+  default => __PACKAGE__,
 );
 
 has bagit => (
