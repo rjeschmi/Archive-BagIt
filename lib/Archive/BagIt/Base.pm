@@ -3,10 +3,12 @@ use warnings;
 
 package Archive::BagIt::Base;
 
+use utf8;
+use open ':std', ':encoding(utf8)';
+use Encode qw(decode);
 use File::Find;
 use File::Spec;
 use Digest::MD5;
-use utf8;
 use Data::Printer;
 
 # VERSION
@@ -230,6 +232,8 @@ sub _build_payload_files{
 
   my @payload=();
   File::Find::find( sub{
+    $File::Find::name = decode ('utf8', $File::Find::name);
+    $_ = decode ('utf8', $_);
     if (-f $_) {
         my $rel_path=File::Spec->catdir($self->rel_payload_path,File::Spec->abs2rel($File::Find::name, $payload_dir));
         #print "pushing ".$rel_path." payload_dir: $payload_dir \n";
@@ -269,6 +273,8 @@ sub _build_non_payload_files {
   my @non_payload = ();
 
   File::Find::find( sub{
+    $File::Find::name = decode('utf8', $File::Find::name);
+    $_=decode ('utf8', $_);
     if (-f $_) {
         my $rel_path=File::Spec->catdir($self->rel_metadata_path,File::Spec->abs2rel($File::Find::name, $self->metadata_path));
         #print "pushing ".$rel_path." payload_dir: $payload_dir \n";

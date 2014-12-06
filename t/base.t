@@ -1,6 +1,8 @@
 
 BEGIN { chdir 't' if -d 't' }
 
+use utf8;
+use open ':std', ':encoding(utf8)';
 use Test::More 'no_plan';
 use strict;
 
