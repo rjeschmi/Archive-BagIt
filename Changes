@@ -2,6 +2,7 @@ Revision history for Archive-BagIt
 
 
 {{$NEXT}}
+  - utf8 fixes
 
 0.052     2014-11-20
   - Fixed dist.ini to include dotfiles (needed for dotbagit test)
