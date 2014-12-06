@@ -4,12 +4,17 @@ use strict;
 use 5.006;
 use warnings;
 
+
 # VERSION
 
+use utf8;
+use open ':std', ':utf8';
 our @checksum_algos = qw(md5 sha1);
 our $DEBUG=0;
+use Encode qw(decode);
 use File::Find;
 use Data::Dumper;
+#use Data::Printer;
 =head1 WARNING
 
 This is experimental software for the moment and under active development. I
@@ -87,7 +92,7 @@ sub _load_manifests {
     while (my $line = <$MANIFEST>) {
         chomp($line);
         my ($digest,$file);
-        ($digest, $file) = $line =~ /^([a-f0-9]+)\s+([a-zA-Z0-9_\.\/\-]+)/;
+        ($digest, $file) = $line =~ /^([a-f0-9]+)\s+(.+)$/;
         if(!$file) {
           die ("This is not a valid manifest file");
         } else {
@@ -175,7 +180,8 @@ sub _manifest_crc32 {
     open(my $fh, ">:utf8",$manifest_file) or die("Cannot create manifest-crc32.txt: $!\n");
     find(
         sub {
-            my $file = $File::Find::name;
+            $_=decode('utf8', $_);
+            my $file = decode('utf8', $File::Find::name);
             if (-f $_) {
                 open(my $DATA, "<:utf8", $_) or die("Cannot read $_: $!");
                 my $digest = sprintf("%010d",crc32($DATA));
@@ -200,7 +206,7 @@ sub _manifest_md5 {
     open(my $md5_fh, ">:utf8",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
     find(
         sub {
-            my $file = $File::Find::name;
+            my $file = decode('utf8', $File::Find::name);
             if (-f $_) {
                 open(my $DATA, "<:raw", "$_") or die("Cannot read $_: $!");
                 my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
@@ -226,7 +232,8 @@ sub _tagmanifest_md5 {
 
   find (
     sub {
-      my $file = $File::Find::name;
+      $_ = decode('utf8',$_);
+      my $file = decode('utf8',$File::Find::name);
       if ($_=~m/^data$/) {
         $File::Find::prune=1;
       }
@@ -280,7 +287,7 @@ sub verify_bag {
     }
 
     # Compile a list of payload files
-    find(sub{ push(@payload, $File::Find::name)  }, $payload_dir);
+    find(sub{ push(@payload, decode('utf8',$File::Find::name))  }, $payload_dir);
 
     # Evaluate each file against the manifest
     my $digestobj = new Digest::MD5;
@@ -288,6 +295,7 @@ sub verify_bag {
         next if (-d ($file));
         my $local_name = substr($file, length($bagit) + 1);
         my ($digest);
+        #p %manifest;
         unless ($manifest{$local_name}) {
           die ("file found not in manifest: [$local_name]");
         }
@@ -369,7 +377,8 @@ sub _payload_files{
 
   my @payload=();
   File::Find::find( sub{
-    push(@payload,$File::Find::name);
+
+    push(@payload,decode('utf8',$File::Find::name));
     #print "name: ".$File::Find::name."\n";
   }, $payload_dir);
 
@@ -396,6 +405,7 @@ sub _non_payload_files {
 
   my @payload = ();
   File::Find::find( sub {
+    $File::Find::name = decode ('utf8', $File::Find::name);
     if(-f $File::Find::name) {
       my ($relpath) = ($File::Find::name=~m!$self->{"bag_path"}/(.*$)!);
       push(@payload, $relpath);

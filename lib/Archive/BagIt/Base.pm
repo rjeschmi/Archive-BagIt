@@ -9,7 +9,7 @@ use Encode qw(decode);
 use File::Find;
 use File::Spec;
 use Digest::MD5;
-use Data::Printer;
+#use Data::Printer;
 
 # VERSION
 
@@ -329,7 +329,7 @@ sub verify_bag {
     my $digestobj = new Digest::MD5;
     foreach my $local_name (@payload) {
         my ($digest);
-        p %manifest;
+        #p %manifest;
         unless ($manifest{"$local_name"}) {
           die ("file found not in manifest: [$local_name]");
         }
