@@ -48,6 +48,7 @@ my $DST_BAG = File::Spec->catdir(@ROOT, 'dst_bag');
   mkdir($DST_BAG);
   copy($SRC_FILES."/1", $DST_BAG);
   copy($SRC_FILES."/2", $DST_BAG);
+  copy($SRC_FILES."/thréê", $DST_BAG);
 
   my $bag = $Class->make_bag($DST_BAG);
 

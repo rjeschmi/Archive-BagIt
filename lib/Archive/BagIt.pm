@@ -83,7 +83,7 @@ sub _load_manifests {
 
   my @manifests = $self->manifest_files();
   foreach my $manifest_file (@manifests) {
-    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST,"<", $manifest_file));
+    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST,"<:utf8", $manifest_file));
     while (my $line = <$MANIFEST>) {
         chomp($line);
         my ($digest,$file);
@@ -107,7 +107,7 @@ sub _load_tagmanifests {
 
   my @tagmanifests = $self->tagmanifest_files();
   foreach my $tagmanifest_file (@tagmanifests) {
-    die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<", $tagmanifest_file));
+    die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<:utf8", $tagmanifest_file));
     while (my $line = <$TAGMANIFEST>) {
       chomp($line);
       my($digest,$file) = split(/\s+/, $line, 2);
@@ -172,12 +172,12 @@ sub _manifest_crc32 {
     my $data_dir = "$bagit/data";
 
     # Generate MD5 digests for all of the files under ./data
-    open(my $fh, ">",$manifest_file) or die("Cannot create manifest-crc32.txt: $!\n");
+    open(my $fh, ">:utf8",$manifest_file) or die("Cannot create manifest-crc32.txt: $!\n");
     find(
         sub {
             my $file = $File::Find::name;
             if (-f $_) {
-                open(my $DATA, "<", $_) or die("Cannot read $_: $!");
+                open(my $DATA, "<:utf8", $_) or die("Cannot read $_: $!");
                 my $digest = sprintf("%010d",crc32($DATA));
                 close($DATA);
                 my $filename = substr($file, length($bagit) + 1);
@@ -197,12 +197,12 @@ sub _manifest_md5 {
     my $data_dir = "$bagit/data";
     print "creating manifest: $data_dir\n";
     # Generate MD5 digests for all of the files under ./data
-    open(my $md5_fh, ">",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
+    open(my $md5_fh, ">:utf8",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
     find(
         sub {
             my $file = $File::Find::name;
             if (-f $_) {
-                open(my $DATA, "<", "$_") or die("Cannot read $_: $!");
+                open(my $DATA, "<:raw", "$_") or die("Cannot read $_: $!");
                 my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
                 close($DATA);
                 my $filename = substr($file, length($bagit) + 1);
@@ -222,7 +222,7 @@ sub _tagmanifest_md5 {
 
   my $tagmanifest_file= "$bagit/tagmanifest-md5.txt";
 
-  open (my $md5_fh, ">", $tagmanifest_file) or die ("Cannot create tagmanifest-md5.txt: $! \n");
+  open (my $md5_fh, ">:utf8", $tagmanifest_file) or die ("Cannot create tagmanifest-md5.txt: $! \n");
 
   find (
     sub {
@@ -234,7 +234,7 @@ sub _tagmanifest_md5 {
         # Ignore, we can't take digest from ourselves
       }
       elsif ( -f $_ ) {
-        open(my $DATA, "<", "$_") or die("Cannot read $_: $!");
+        open(my $DATA, "<:raw", "$_") or die("Cannot read $_: $!");
         my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
         close($DATA);
         my $filename = substr($file, length($bagit) + 1);
@@ -292,7 +292,7 @@ sub verify_bag {
           die ("file found not in manifest: [$local_name]");
         }
         #my $start_time=time();
-        open(my $fh, "<", "$bagit/$local_name") or die ("Cannot open $local_name");
+        open(my $fh, "<:raw", "$bagit/$local_name") or die ("Cannot open $local_name");
         $digest = $digestobj->addfile($fh)->hexdigest;
         close($fh);
         #print "$bagit/$local_name md5 in ".(time()-$start_time)."\n";
@@ -327,8 +327,7 @@ sub verify_bag {
 sub get_checksum {
   my($self) =@_;
   my $bagit = $self->{'bag_path'};
-  open(my $SRCFILE, "<",  $bagit."/manifest-md5.txt");
-  binmode($SRCFILE);
+  open(my $SRCFILE, "<:raw",  $bagit."/manifest-md5.txt");
   my $srchex=Digest::MD5->new->addfile($SRCFILE)->hexdigest;
   close($SRCFILE);
   return $srchex;

@@ -6,7 +6,7 @@ package Archive::BagIt::Base;
 use File::Find;
 use File::Spec;
 use Digest::MD5;
-
+use utf8;
 use Data::Printer;
 
 # VERSION
@@ -147,8 +147,7 @@ sub _build_checksum_algos {
 sub _build_bag_checksum {
   my($self) =@_;
   my $bagit = $self->{'bag_path'};
-  open(my $SRCFILE, "<",  $bagit."/manifest-md5.txt");
-  binmode($SRCFILE);
+  open(my $SRCFILE, "<:raw",  $bagit."/manifest-md5.txt");
   my $srchex=Digest::MD5->new->addfile($SRCFILE)->hexdigest;
   close($SRCFILE);
   return $srchex;
@@ -187,7 +186,7 @@ sub _build_tagmanifest_entries {
   my @tagmanifests = @{$self->tagmanifest_files};
   my $tagmanifest_entries = {};
   foreach my $tagmanifest_file (@tagmanifests) {
-    die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<", $tagmanifest_file));
+    die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<:utf8", $tagmanifest_file));
     while (my $line = <$TAGMANIFEST>) {
       chomp($line);
       my($digest,$file) = split(/\s+/, $line, 2);
@@ -205,11 +204,11 @@ sub _build_manifest_entries {
   my @manifests = @{$self->manifest_files};
   my $manifest_entries = {};
   foreach my $manifest_file (@manifests) {
-    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST, "<", $manifest_file));
+    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST, "<:utf8", $manifest_file));
     while (my $line = <$MANIFEST>) {
         chomp($line);
         my ($digest,$file);
-        ($digest, $file) = $line =~ /^([a-f0-9]+)\s+([a-zA-Z0-9_\.\/\-]+)/;
+        ($digest, $file) = $line =~ /^([a-f0-9]+)\s+(.+)/;
         if(!$file) {
           die ("This is not a valid manifest file");
         } else {
@@ -324,10 +323,11 @@ sub verify_bag {
     my $digestobj = new Digest::MD5;
     foreach my $local_name (@payload) {
         my ($digest);
-        unless ($manifest{$local_name}) {
+        p %manifest;
+        unless ($manifest{"$local_name"}) {
           die ("file found not in manifest: [$local_name]");
         }
-        open(my $fh, "<", "$bagit/$local_name") or die ("Cannot open $local_name");
+        open(my $fh, "<:raw", "$bagit/$local_name") or die ("Cannot open $local_name");
         $digest = $digestobj->addfile($fh)->hexdigest;
         #print $digest."\n";
         close($fh);
@@ -406,11 +406,11 @@ sub _write_manifest_md5 {
     my($self) = @_;
     my $manifest_file = $self->metadata_path."/manifest-md5.txt";
     # Generate MD5 digests for all of the files under ./data
-    open(my $md5_fh, ">",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
+    open(my $md5_fh, ">:utf8",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
     foreach my $rel_payload_file (@{$self->payload_files}) {
         #print "rel_payload_file: ".$rel_payload_file;
         my $payload_file = File::Spec->catdir($self->bag_path, $rel_payload_file);
-        open(my $DATA, "<", "$payload_file") or die("Cannot read $payload_file: $!");
+        open(my $DATA, "<:raw", "$payload_file") or die("Cannot read $payload_file: $!");
         my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
         close($DATA);
         print($md5_fh "$digest  $rel_payload_file\n");
@@ -426,7 +426,7 @@ sub _write_tagmanifest_md5 {
 
   my $tagmanifest_file= $self->metadata_path."/tagmanifest-md5.txt";
 
-  open (my $md5_fh, ">", $tagmanifest_file) or die ("Cannot create tagmanifest-md5.txt: $! \n");
+  open (my $md5_fh, ">:utf8", $tagmanifest_file) or die ("Cannot create tagmanifest-md5.txt: $! \n");
 
   foreach my $rel_nonpayload_file (@{$self->non_payload_files}) {
       my $nonpayload_file = File::Spec->catdir($self->bag_path, $rel_nonpayload_file);
