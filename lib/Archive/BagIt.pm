@@ -88,7 +88,7 @@ sub _load_manifests {
 
   my @manifests = $self->manifest_files();
   foreach my $manifest_file (@manifests) {
-    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST,"<:utf8", $manifest_file));
+    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST,"<:encoding(utf8)", $manifest_file));
     while (my $line = <$MANIFEST>) {
         chomp($line);
         my ($digest,$file);
@@ -112,7 +112,7 @@ sub _load_tagmanifests {
 
   my @tagmanifests = $self->tagmanifest_files();
   foreach my $tagmanifest_file (@tagmanifests) {
-    die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<:utf8", $tagmanifest_file));
+    die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<:encoding(utf8)", $tagmanifest_file));
     while (my $line = <$TAGMANIFEST>) {
       chomp($line);
       my($digest,$file) = split(/\s+/, $line, 2);
@@ -177,13 +177,13 @@ sub _manifest_crc32 {
     my $data_dir = "$bagit/data";
 
     # Generate MD5 digests for all of the files under ./data
-    open(my $fh, ">:utf8",$manifest_file) or die("Cannot create manifest-crc32.txt: $!\n");
+    open(my $fh, ">:encoding(utf8)",$manifest_file) or die("Cannot create manifest-crc32.txt: $!\n");
     find(
         sub {
             $_=decode('utf8', $_);
             my $file = decode('utf8', $File::Find::name);
             if (-f $_) {
-                open(my $DATA, "<:utf8", $_) or die("Cannot read $_: $!");
+                open(my $DATA, "<:encoding(utf8)", $_) or die("Cannot read $_: $!");
                 my $digest = sprintf("%010d",crc32($DATA));
                 close($DATA);
                 my $filename = substr($file, length($bagit) + 1);
@@ -203,7 +203,7 @@ sub _manifest_md5 {
     my $data_dir = "$bagit/data";
     print "creating manifest: $data_dir\n";
     # Generate MD5 digests for all of the files under ./data
-    open(my $md5_fh, ">:utf8",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
+    open(my $md5_fh, ">:encoding(utf8)",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
     find(
         sub {
             my $file = decode('utf8', $File::Find::name);
@@ -228,7 +228,7 @@ sub _tagmanifest_md5 {
 
   my $tagmanifest_file= "$bagit/tagmanifest-md5.txt";
 
-  open (my $md5_fh, ">:utf8", $tagmanifest_file) or die ("Cannot create tagmanifest-md5.txt: $! \n");
+  open (my $md5_fh, ">:encoding(utf8)", $tagmanifest_file) or die ("Cannot create tagmanifest-md5.txt: $! \n");
 
   find (
     sub {
