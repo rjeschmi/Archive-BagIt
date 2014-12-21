@@ -188,7 +188,7 @@ sub _build_tagmanifest_entries {
   my @tagmanifests = @{$self->tagmanifest_files};
   my $tagmanifest_entries = {};
   foreach my $tagmanifest_file (@tagmanifests) {
-    die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<:utf8", $tagmanifest_file));
+    die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<:encoding(utf8)", $tagmanifest_file));
     while (my $line = <$TAGMANIFEST>) {
       chomp($line);
       my($digest,$file) = split(/\s+/, $line, 2);
@@ -206,7 +206,7 @@ sub _build_manifest_entries {
   my @manifests = @{$self->manifest_files};
   my $manifest_entries = {};
   foreach my $manifest_file (@manifests) {
-    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST, "<:utf8", $manifest_file));
+    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST, "<:encoding(utf8)", $manifest_file));
     while (my $line = <$MANIFEST>) {
         chomp($line);
         my ($digest,$file);
@@ -412,7 +412,7 @@ sub _write_manifest_md5 {
     my($self) = @_;
     my $manifest_file = $self->metadata_path."/manifest-md5.txt";
     # Generate MD5 digests for all of the files under ./data
-    open(my $md5_fh, ">:utf8",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
+    open(my $md5_fh, ">:encoding(utf8)",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
     foreach my $rel_payload_file (@{$self->payload_files}) {
         #print "rel_payload_file: ".$rel_payload_file;
         my $payload_file = File::Spec->catdir($self->bag_path, $rel_payload_file);
@@ -432,7 +432,7 @@ sub _write_tagmanifest_md5 {
 
   my $tagmanifest_file= $self->metadata_path."/tagmanifest-md5.txt";
 
-  open (my $md5_fh, ">:utf8", $tagmanifest_file) or die ("Cannot create tagmanifest-md5.txt: $! \n");
+  open (my $md5_fh, ">:encoding(utf8)", $tagmanifest_file) or die ("Cannot create tagmanifest-md5.txt: $! \n");
 
   foreach my $rel_nonpayload_file (@{$self->non_payload_files}) {
       my $nonpayload_file = File::Spec->catdir($self->bag_path, $rel_nonpayload_file);
