@@ -2,7 +2,7 @@ NAME
     Archive::BagIt
 
 VERSION
-    version 0.053
+    version 0.054
 
 SYNOPSIS
     This modules will hopefully help with the basic commands needed to
@@ -131,7 +131,7 @@ AUTHOR
     Rob Schmidt <rjeschmi@gmail.com>
 
 COPYRIGHT AND LICENSE
-    This software is copyright (c) 2014 by Rob Schmidt and William
+    This software is copyright (c) 2015 by Rob Schmidt and William
     Wueppelmann.
 
     This is free software; you can redistribute it and/or modify it under

@@ -6,6 +6,9 @@ package Archive::BagIt::Base;
 use Moose;
 
 
+use utf8;
+use open ':std', ':encoding(utf8)';
+use Encode qw(decode);
 use File::Find;
 use File::Spec;
 use Digest::MD5;
@@ -210,8 +213,7 @@ sub _build_checksum_algos {
 sub _build_bag_checksum {
   my($self) =@_;
   my $bagit = $self->{'bag_path'};
-  open(my $SRCFILE, "<",  $bagit."/manifest-md5.txt");
-  binmode($SRCFILE);
+  open(my $SRCFILE, "<:raw",  $bagit."/manifest-md5.txt");
   my $srchex=Digest::MD5->new->addfile($SRCFILE)->hexdigest;
   close($SRCFILE);
   return $srchex;
@@ -250,7 +252,7 @@ sub _build_tagmanifest_entries {
   my @tagmanifests = @{$self->tagmanifest_files};
   my $tagmanifest_entries = {};
   foreach my $tagmanifest_file (@tagmanifests) {
-    die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<", $tagmanifest_file));
+    die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<:encoding(utf8)", $tagmanifest_file));
     while (my $line = <$TAGMANIFEST>) {
       chomp($line);
       my($digest,$file) = split(/\s+/, $line, 2);
@@ -268,11 +270,11 @@ sub _build_manifest_entries {
   my @manifests = @{$self->manifest_files};
   my $manifest_entries = {};
   foreach my $manifest_file (@manifests) {
-    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST, "<", $manifest_file));
+    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST, "<:encoding(utf8)", $manifest_file));
     while (my $line = <$MANIFEST>) {
         chomp($line);
         my ($digest,$file);
-        ($digest, $file) = $line =~ /^([a-f0-9]+)\s+([a-zA-Z0-9_\.\/\-]+)/;
+        ($digest, $file) = $line =~ /^([a-f0-9]+)\s+(.+)/;
         if(!$file) {
           die ("This is not a valid manifest file");
         } else {
@@ -294,6 +296,8 @@ sub _build_payload_files{
 
   my @payload=();
   File::Find::find( sub{
+    $File::Find::name = decode ('utf8', $File::Find::name);
+    $_ = decode ('utf8', $_);
     if (-f $_) {
         my $rel_path=File::Spec->catdir($self->rel_payload_path,File::Spec->abs2rel($File::Find::name, $payload_dir));
         #print "pushing ".$rel_path." payload_dir: $payload_dir \n";
@@ -333,6 +337,8 @@ sub _build_non_payload_files {
   my @non_payload = ();
 
   File::Find::find( sub{
+    $File::Find::name = decode('utf8', $File::Find::name);
+    $_=decode ('utf8', $_);
     if (-f $_) {
         my $rel_path=File::Spec->catdir($self->rel_metadata_path,File::Spec->abs2rel($File::Find::name, $self->metadata_path));
         #print "pushing ".$rel_path." payload_dir: $payload_dir \n";
@@ -402,10 +408,11 @@ sub verify_bag {
     my $digestobj = new Digest::MD5;
     foreach my $local_name (@payload) {
         my ($digest);
-        unless ($manifest{$local_name}) {
+        #p %manifest;
+        unless ($manifest{"$local_name"}) {
           die ("file found not in manifest: [$local_name]");
         }
-        open(my $fh, "<", "$bagit/$local_name") or die ("Cannot open $local_name");
+        open(my $fh, "<:raw", "$bagit/$local_name") or die ("Cannot open $local_name");
         $digest = $digestobj->addfile($fh)->hexdigest;
         #print $digest."\n";
         close($fh);
@@ -469,6 +476,5 @@ sub make_bag {
   $self->manifests->{"md5"}->create_tagmanifest();
   return $self;
 }
-
 
 1;

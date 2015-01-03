@@ -1,6 +1,8 @@
 
 BEGIN { chdir 't' if -d 't' }
 
+use utf8;
+use open ':std', ':encoding(utf8)';
 use Test::More 'no_plan';
 use strict;
 
@@ -23,6 +25,7 @@ my @ROOT = grep {length} 'src';
 my $SRC_BAG = File::Spec->catdir( @ROOT, 'src_bag');
 my $SRC_FILES = File::Spec->catdir( @ROOT, 'src_files');
 my $DST_BAG = File::Spec->catdir(@ROOT, 'dst_bag');
+
 
 
 #validate tests
@@ -52,6 +55,7 @@ my $DST_BAG = File::Spec->catdir(@ROOT, 'dst_bag');
   mkdir($DST_BAG);
   copy($SRC_FILES."/1", $DST_BAG);
   copy($SRC_FILES."/2", $DST_BAG);
+  copy($SRC_FILES."/thréê", $DST_BAG);
 
   note "making bag $DST_BAG";
   my $bag = $Class->make_bag($DST_BAG);
