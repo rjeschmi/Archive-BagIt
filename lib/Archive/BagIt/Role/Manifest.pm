@@ -14,6 +14,13 @@ has 'algorithm' => (
     isa=>'HashRef',
 );
 
+sub BUILD {}
+
+after BUILD => sub {
+    my $self = shift;
+    $self->bagit->manifests ({$self->algorithm->name, $self}) ;
+};
+
 sub verify_file {
 
 }
@@ -73,15 +80,6 @@ sub create_tagmanifest {
   close($fh);
 }
 
-sub register_plugin {
-    my ($class, $bagit) = @_;
-    
-    my $self = $class->new({bagit=>$bagit});
-    my $plugin_name = $self->plugin_name;
-    p ($self);
-    $self->bagit->plugins( { $plugin_name => $self });
-    $self->bagit->manifests( {$self->algorithm->name =>$self } );
-}
 
 sub create_bagit {
     my($self) = @_;

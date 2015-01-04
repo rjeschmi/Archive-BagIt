@@ -19,11 +19,10 @@ has bagit => (
   weak_ref => 1,
 );
 
-sub register_plugin {
-    my ($self, $bagit);
-
-    $self->bagit = $bagit;
-    push $self->bagit->plugins, $self;
+sub BUILD {
+    my ($self) = @_;
+    my $plugin_name = $self->plugin_name;
+    $self->bagit->plugins( { $plugin_name => $self });
 }
 
 1;

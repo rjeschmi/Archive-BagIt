@@ -4,7 +4,7 @@ use warnings;
 package Archive::BagIt::Base;
 
 use Moose;
-
+use namespace::autoclean;
 
 use utf8;
 use open ':std', ':encoding(utf8)';
@@ -361,18 +361,19 @@ sub _build_non_payload_files {
 sub load_plugins {
     my ($self, @plugins) = @_;
  
-    p(@plugins); 
+    #p(@plugins); 
     my $loaded_plugins = $self->plugins;  
     @plugins = grep { not exists $loaded_plugins->{$_} } @plugins; 
 
     return if @plugins == 0;
     foreach my $plugin (@plugins) {
         load_class ($plugin) or die ("Can't load $plugin");
-        $plugin->register_plugin($self);
+        $plugin->new({bagit => $self});
     }
 
     return 1;
 }
+
 =head2 verify_bag
 
 An interface to verify a bag.
@@ -462,6 +463,8 @@ sub init_metadata {
     $self->manifests->{"md5"}->create_baginfo();
     return $self;
 }
+
+
 =head2 make_bag
   A constructor that will make and return a bag from a direcory
 
@@ -476,5 +479,7 @@ sub make_bag {
   $self->manifests->{"md5"}->create_tagmanifest();
   return $self;
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;

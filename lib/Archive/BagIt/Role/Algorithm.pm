@@ -30,7 +30,7 @@ sub register_plugin {
     my $self = $class->new({bagit=>$bagit});
 
     my $plugin_name = $self->plugin_name;
-    p ($self);
+    #p ($self);
     $self->bagit->plugins( { $plugin_name => $self });
     $self->bagit->algos( {$self->name => $self });
 }
