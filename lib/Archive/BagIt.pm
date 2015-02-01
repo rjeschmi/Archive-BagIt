@@ -24,7 +24,7 @@ We use it fairly widely in-house, but it doesn't necessarily implement all of th
 
 Email me with anything you need done urgently.
 
-Also: Check out Archive::BagIt::Fast if you are willing to add some extra dependendies to get
+Also: Check out Archive::BagIt::Fast if you are willing to add some extra dependencies to get
 better speed by mmap-ing files.
 
 =head1 NAME
@@ -59,7 +59,11 @@ and I will endeavour to maintain compatibility with it.
 =head1 SUBROUTINES
 
 =head2 new
-   An Object Oriented Interface to a bag. Opens an existing bag.
+
+An Object Oriented Interface to a bag. Opens an existing bag.
+
+  my $bag = Archive::BagIt->new('/path/to/bag');
+
 =cut
 
 sub new {
@@ -125,9 +129,11 @@ sub _load_tagmanifests {
 }
 
 =head2 make_bag
-   A constructor that will make and return a bag from a directory
 
-   If a data directory exists, assume it is already a bag (no checking for invalid files in root)
+A constructor that will make and return a bag from a directory
+
+If a data directory exists, assume it is already a bag (no checking for invalid files in root)
+
 =cut
 
 sub make_bag {
@@ -256,8 +262,8 @@ sub _tagmanifest_md5 {
 
 An interface to verify a bag.
 
-You might also want to check Archive::BagIt::Fast to see a more direct way of accessing files (and thus faster).
-
+You might also want to check L<Archive::BagIt::Fast> to see a more direct way of
+accessing files (and thus faster).
 
 =cut
 
@@ -328,7 +334,7 @@ sub verify_bag {
 
 =head2 get_checksum
 
-   This is the checksum for the bag, md5 of the manifest-md5.txt
+This is the checksum for the bag, md5 of the manifest-md5.txt
 
 =cut
 
@@ -343,7 +349,8 @@ sub get_checksum {
 
 =head2 version
 
-   Returns the bagit version according to the bagit.txt file.
+Returns the bagit version according to the bagit.txt file.
+
 =cut
 
 sub version {
@@ -360,7 +367,7 @@ sub version {
 
 =head2 payload_files
 
-  Returns an array with all of the payload files (those files that are below the data directory)
+Returns an array with all of the payload files (those files that are below the data directory)
 
 =cut
 
@@ -388,7 +395,7 @@ sub _payload_files{
 
 =head2 non_payload_files
 
-  Returns an array with files that are in the root of the bag, non-manifest files
+Returns an array with files that are in the root of the bag, non-manifest files
 
 =cut
 
@@ -425,7 +432,7 @@ sub _non_payload_files {
 
 =head2 manifest_files
 
-  return an array with the list of manifest files that exist in the bag
+Return an array with the list of manifest files that exist in the bag
 
 =cut
 
@@ -443,8 +450,8 @@ sub manifest_files {
 }
 
 =head2 tagmanifest_files
-  
-  return an array with the list of tagmanifest files
+
+Return an array with the list of tagmanifest files
 
 =cut
 
