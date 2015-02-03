@@ -440,9 +440,10 @@ sub verify_bag {
 }
 
 =head2 init_metadata
-  A constructor that will just create the metadata directory
 
-  This won't make a bag, but it will create the conditions to do that eventually
+A constructor that will just create the metadata directory
+
+This won't make a bag, but it will create the conditions to do that eventually
 
 =cut
 
@@ -466,9 +467,10 @@ sub init_metadata {
 
 
 =head2 make_bag
-  A constructor that will make and return a bag from a direcory
 
-  If a data directory exists, assume it is already a bag (no checking for invalid files in root)
+A constructor that will make and return a bag from a directory
+
+If a data directory exists, assume it is already a bag (no checking for invalid files in root)
 
 =cut
 
