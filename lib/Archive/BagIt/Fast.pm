@@ -1,6 +1,7 @@
 package Archive::BagIt::Fast;
 
 use strict;
+use warnings;
 use parent "Archive::BagIt";
 
 # VERSION
