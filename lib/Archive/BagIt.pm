@@ -207,7 +207,7 @@ sub _manifest_md5 {
     my($self, $bagit) = @_;
     my $manifest_file = "$bagit/manifest-md5.txt";
     my $data_dir = "$bagit/data";
-    print "creating manifest: $data_dir\n";
+    #print "creating manifest: $data_dir\n";
     # Generate MD5 digests for all of the files under ./data
     open(my $md5_fh, ">:encoding(utf8)",$manifest_file) or die("Cannot create manifest-md5.txt: $!\n");
     find(
