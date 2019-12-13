@@ -7,8 +7,6 @@ with 'Archive::BagIt::Role::Plugin';
 
 use namespace::autoclean;
 
-use Data::Printer;
-
 has 'algorithm' => (
     is => 'rw',
     isa=>'HashRef',
@@ -38,14 +36,12 @@ sub create_manifest {
 
     my $algo = $self->algorithm->name;
     my $manifest_file = $self->bagit->metadata_path."/manifest-${algo}.txt";
-    # Generate MD5 digests for all of the files under ./data
+    # Generate digests for all of the files under ./data
     open(my $fh, ">",$manifest_file) or die("Cannot create manifest-${algo}.txt: $!\n");
     foreach my $rel_payload_file (@{$self->bagit->payload_files}) {
         #print "rel_payload_file: ".$rel_payload_file;
         my $payload_file = File::Spec->catdir($self->bagit->bag_path, $rel_payload_file);
-        open(my $DATA, "<", "$payload_file") or die("Cannot read $payload_file: $!");
-        my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
-        close($DATA);
+        my $digest = $self->algorithm->verify_file( $payload_file );
         print($fh "$digest  $rel_payload_file\n");
         #print "lineout: $digest $filename\n";
     }
@@ -67,9 +63,7 @@ sub create_tagmanifest {
             # Ignore, we can't take digest from ourselves
         }
         elsif ( -f $nonpayload_file && $nonpayload_file=~m/.*\.txt$/) {
-            open(my $DATA, "<", "$nonpayload_file") or die("Cannot read $_: $!");
-            my $digest = Digest::MD5->new->addfile($DATA)->hexdigest;
-            close($DATA);
+            my $digest = $self->algorithm->verify_file( $nonpayload_file );
             print($fh "$digest  $rel_nonpayload_file\n");
         }
         else {
@@ -84,7 +78,7 @@ sub create_tagmanifest {
 sub create_bagit {
     my($self) = @_;
     open(my $BAGIT, ">", $self->bagit->metadata_path."/bagit.txt") or die("Can't open $self->bagit->metadata_path/bagit.txt for writing: $!");
-    print($BAGIT "BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
+    print($BAGIT "BagIt-Version: 1.0\nTag-File-Character-Encoding: UTF-8");
     close($BAGIT);
     return 1;
 }

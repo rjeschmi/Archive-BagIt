@@ -13,7 +13,6 @@ use File::Find;
 use File::Spec;
 use Digest::MD5;
 use Class::Load qw(load_class);
-use Data::Printer;
 
 # VERSION
 
@@ -91,9 +90,15 @@ has 'checksum_algos' => (
 );
 
 has 'bag_version' => (
-    is => 'ro',
+    is       => 'ro',
+    lazy     => 1,
+    builder  => '_build_bag_version',
+);
+
+has 'forced_fixity_algorithm' => (
+    is   => 'ro',
     lazy => 1,
-    builder => '_build_bag_version',
+    builder  => '_build_forced_fixity_algorithm',
 );
 
 has 'bag_checksum' => (
@@ -172,7 +177,7 @@ around 'BUILDARGS' , sub {
 
 sub BUILD {
     my ($self, $args) = @_;
-    $self->load_plugins(("Archive::BagIt::Plugin::Manifest::MD5"));
+    $self->load_plugins(("Archive::BagIt::Plugin::Manifest::MD5", "Archive::BagIt::Plugin::Manifest::SHA512"));
 }
 sub _build_bag_path_arr {
     my ($self) = @_;
@@ -206,7 +211,7 @@ sub _build_rel_metadata_path {
 
 sub _build_checksum_algos {
     my($self) = @_;
-    my $checksums = [ 'md5', 'sha1' ];
+    my $checksums = [ 'md5', 'sha1', 'sha256', 'sha512' ];
     return $checksums;
 }
 
@@ -222,7 +227,6 @@ sub _build_bag_checksum {
 sub _build_manifest_files {
   my($self) = @_;
   my @manifest_files;
-  #p $self->checksum_algos;
   foreach my $algo (@{$self->checksum_algos}) {
     my $manifest_file = $self->metadata_path."/manifest-$algo.txt";
     if (-f $manifest_file) {
@@ -299,9 +303,10 @@ sub _build_payload_files{
     $File::Find::name = decode ('utf8', $File::Find::name);
     $_ = decode ('utf8', $_);
     if (-f $_) {
-        my $rel_path=File::Spec->catdir($self->rel_payload_path,File::Spec->abs2rel($File::Find::name, $payload_dir));
-        #print "pushing ".$rel_path." payload_dir: $payload_dir \n";
-        push(@payload,$rel_path);
+        #my $rel_path=File::Spec->catdir($self->rel_payload_path,File::Spec->abs2rel($File::Find::name, $payload_dir));
+        #print "pushing ".$rel_path." payload_dir: $payload_dir ($_) \n";
+        #push(@payload,$rel_path);
+        push @payload, "data/$_";
     }
     elsif($self->metadata_path_arr > $self->payload_path_arr && -d _ && $_ eq $self->rel_metadata_path) {
         #print "pruning ".$File::Find::name."\n";
@@ -358,6 +363,16 @@ sub _build_non_payload_files {
 
 }
 
+sub _build_forced_fixity_algorithm {
+    my ($self) = @_;
+    if ($self->bag_version() >= 1.0) {
+        return Archive::BagIt::Plugin::Algorithm::SHA512->new(bagit => $self);
+    }
+    else {
+        return Archive::BagIt::Plugin::Algorithm::MD5->new(bagit => $self);
+    }
+}
+
 sub load_plugins {
     my ($self, @plugins) = @_;
  
@@ -388,7 +403,8 @@ sub verify_bag {
     #removed the ability to pass in a bag in the parameters, but might want options
     #like $return all errors rather than dying on first one
     my $bagit = $self->bag_path;
-    my $manifest_file = $self->metadata_path."/manifest-md5.txt";
+    $self->bag_version(); # to call trigger
+    my $manifest_file = "$bagit/manifest-".$self->forced_fixity_algorithm()->name().".txt"; # FIXME: use plugin instead
     my $payload_dir   = $self->payload_path;
     my $return_all_errors = $opts->{return_all_errors};
     my %invalids;
@@ -406,17 +422,15 @@ sub verify_bag {
     my %manifest = %{$self->manifest_entries};
 
     # Evaluate each file against the manifest
-    my $digestobj = new Digest::MD5;
+    my $digestobj = $self->forced_fixity_algorithm();
     foreach my $local_name (@payload) {
         my ($digest);
-        #p %manifest;
         unless ($manifest{"$local_name"}) {
           die ("file found not in manifest: [$local_name]");
         }
-        open(my $fh, "<:raw", "$bagit/$local_name") or die ("Cannot open $local_name");
-        $digest = $digestobj->addfile($fh)->hexdigest;
-        #print $digest."\n";
-        close($fh);
+        if (! -r "$bagit/$local_name" ) {die ("Cannot open $local_name");}
+        $digest = $digestobj->verify_file( "$bagit/$local_name");
+        print "digest of $bagit/$local_name: $digest\n" if $DEBUG;
         unless ($digest eq $manifest{$local_name}) {
           if($return_all_errors) {
             $invalids{$local_name} = $digest;
@@ -460,8 +474,8 @@ sub init_metadata {
         #metadata path is not the root path for some reason
         mkdir ($self->metadata_path);
     }
-    $self->manifests->{"md5"}->create_bagit();
-    $self->manifests->{"md5"}->create_baginfo();
+    $self->manifests->{"sha512"}->create_bagit();
+    $self->manifests->{"sha512"}->create_baginfo();
     return $self;
 }
 
@@ -477,8 +491,8 @@ If a data directory exists, assume it is already a bag (no checking for invalid 
 sub make_bag {
   my ($class, $bag_path) = @_;
   my $self = $class->init_metadata($bag_path);
-  $self->manifests->{"md5"}->create_manifest();
-  $self->manifests->{"md5"}->create_tagmanifest();
+  $self->manifests->{"sha512"}->create_manifest();
+  $self->manifests->{"sha512"}->create_tagmanifest();
   return $self;
 }
 
