@@ -131,7 +131,7 @@ has 'tagmanifest_entries' => (
     builder => '_build_tagmanifest_entries',
 );
 
-has 'payload_files' => (
+has 'payload_files' => ( # relatively to bagit base
     is => 'ro',
     lazy => 1,
     builder => '_build_payload_files',
@@ -297,6 +297,7 @@ sub _build_payload_files{
   my($self) = @_;
 
   my $payload_dir = $self->payload_path;
+  my $payload_reldir = $self->rel_payload_path;
 
   my @payload=();
   File::Find::find( sub{
@@ -306,7 +307,8 @@ sub _build_payload_files{
         #my $rel_path=File::Spec->catdir($self->rel_payload_path,File::Spec->abs2rel($File::Find::name, $payload_dir));
         #print "pushing ".$rel_path." payload_dir: $payload_dir ($_) \n";
         #push(@payload,$rel_path);
-        push @payload, "data/$_";
+        my $localpath = $payload_reldir eq "." ? $_ : "$payload_reldir/$_";
+        push @payload, $localpath; # relative to bagit base dir
     }
     elsif($self->metadata_path_arr > $self->payload_path_arr && -d _ && $_ eq $self->rel_metadata_path) {
         #print "pruning ".$File::Find::name."\n";
@@ -403,18 +405,18 @@ sub verify_bag {
     #removed the ability to pass in a bag in the parameters, but might want options
     #like $return all errors rather than dying on first one
     my $bagit = $self->bag_path;
-    $self->bag_version(); # to call trigger
-    my $manifest_file = "$bagit/manifest-".$self->forced_fixity_algorithm()->name().".txt"; # FIXME: use plugin instead
+    my $version = $self->bag_version(); # to call trigger
+    my $manifest_file = $self->metadata_path."/manifest-".$self->forced_fixity_algorithm()->name().".txt"; # FIXME: use plugin instead
     my $payload_dir   = $self->payload_path;
     my $return_all_errors = $opts->{return_all_errors};
     my %invalids;
     my @payload       = @{$self->payload_files};
 
-    die("$manifest_file is not a regular file") unless -f ($manifest_file);
+    die("$manifest_file is not a regular file for bagit $version") unless -f ($manifest_file);
     die("$payload_dir is not a directory") unless -d ($payload_dir);
 
-    unless ($self->bag_version > .95) {
-        die ("Bag Version is unsupported");
+    unless ($version > .95) {
+        die ("Bag Version $version is unsupported");
     }
 
     # Read the manifest file
@@ -423,12 +425,12 @@ sub verify_bag {
 
     # Evaluate each file against the manifest
     my $digestobj = $self->forced_fixity_algorithm();
-    foreach my $local_name (@payload) {
+    foreach my $local_name (@payload) { # local_name is relative to bagit base
         my ($digest);
         unless ($manifest{"$local_name"}) {
           die ("file found not in manifest: [$local_name]");
         }
-        if (! -r "$bagit/$local_name" ) {die ("Cannot open $local_name");}
+        if (! -r "$bagit/$local_name" ) {die ("Cannot open $bagit/$local_name");}
         $digest = $digestobj->verify_file( "$bagit/$local_name");
         print "digest of $bagit/$local_name: $digest\n" if $DEBUG;
         unless ($digest eq $manifest{$local_name}) {
@@ -436,7 +438,7 @@ sub verify_bag {
             $invalids{$local_name} = $digest;
           }
           else {
-            die ("file: $local_name invalid");
+            die ("file: $bagit/$local_name invalid");
           }
         }
         delete($manifest{$local_name});
@@ -445,7 +447,7 @@ sub verify_bag {
       foreach my $invalid (keys(%invalids)) {
         print "invalid: $invalid hash: ".$invalids{$invalid}."\n";
       }
-      die ("bag verify failed with invalid files");
+      die ("bag verify for bagit $version failed with invalid files");
     }
     # Make sure there are no missing files
     if (keys(%manifest)) { die ("Missing files in bag".p(%manifest)); }
@@ -465,6 +467,7 @@ sub init_metadata {
     my ($class, $bag_path) = @_;
     unless ( -d $bag_path) { die ( "source bag directory doesn't exist"); }
     my $self = $class->new(bag_path=>$bag_path);
+    warn "no payload path\n" if ! -d $self->payload_path;
     unless ( -d $self->payload_path) {
         rename ($bag_path, $bag_path.".tmp");
         mkdir  ($bag_path);
