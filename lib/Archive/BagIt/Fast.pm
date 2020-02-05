@@ -33,7 +33,7 @@ sub verify_bag {
     die("$payload_dir is not a directory") unless -d ($payload_dir);
     # Read the manifest file
     #print Dumper($self->{entries});
-    foreach my $entry (keys($self->{entries})) {
+    foreach my $entry (keys( @{$self->{entries}})) {
       $manifest{$entry} = $self->{entries}->{$entry};
     }
     # Compile a list of payload files
