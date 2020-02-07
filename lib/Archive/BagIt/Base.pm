@@ -375,6 +375,14 @@ sub _build_forced_fixity_algorithm {
     }
 }
 
+=head2 load_plugins
+
+As default SHA512 and MD5 will be loaded and therefore used. If you want to create a bag only with one or a specific
+checksum-algorithm, you could use this method to (re-)register it. It expects list of strings with namespace of type:
+Archive::BagIt::Plugin::Algorithm::XXX where XXX is your chosen fixity algorithm.
+
+=cut
+
 sub load_plugins {
     my ($self, @plugins) = @_;
  
