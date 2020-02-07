@@ -11,6 +11,7 @@ use open ':std', ':encoding(utf8)';
 use Encode qw(decode);
 use File::Find;
 use File::Spec;
+use File::stat;
 use Digest::MD5;
 use Class::Load qw(load_class);
 
@@ -463,6 +464,68 @@ sub verify_bag {
     return 1;
 }
 
+=head2 calc_payload_oxum()
+
+returns an array with octets and streamcount of payload-dir
+
+=cut
+
+
+
+sub calc_payload_oxum {
+    my($self) = @_;
+    my @payload = @{$self->payload_files};
+    my $octets=0;
+    my $streamcount = scalar @payload;
+    foreach my $local_name (@payload) {# local_name is relative to bagit base
+        my $file = $self->bag_path()."/$local_name";
+        my $sb = stat($file);
+        $octets += $sb->size;
+    }
+    return ($octets, $streamcount);
+}
+
+=head2 calc_bagsize()
+
+returns a string with human readable size of paylod
+
+=cut
+
+sub calc_bagsize {
+    my($self) = @_;
+    my ($octets,$streamcount) = $self->calc_payload_oxum();
+    if ($octets < 1024) { return "$octets B"; }
+    elsif ($octets < 1024*1024) {return sprintf("%0.1f kB", $octets/1024); }
+    elsif ($octets < 1024*1024*1024) {return sprintf "%0.1f MB", $octets/(1024*1024); }
+    elsif ($octets < 1024*1024*1024*1024) {return sprintf "%0.1f GB", $octets/(1024*1024*1024); }
+    else { return sprintf "%0.2f TB", $octets/(1024*1024*1024*1024); }
+}
+
+sub create_bagit {
+    my($self) = @_;
+    open(my $BAGIT, ">", $self->metadata_path."/bagit.txt") or die("Can't open $self->metadata_path/bagit.txt for writing: $!");
+    print($BAGIT "BagIt-Version: 1.0\nTag-File-Character-Encoding: UTF-8");
+    close($BAGIT);
+    return 1;
+}
+
+sub create_baginfo {
+    use POSIX;
+    my($self, %param) = @_;
+    open(my $BAGINFO, ">", $self->metadata_path."/bag-info.txt") or die("Can't open $self->metadata_path/bag-info.txt for writing: $!");
+    $param{'Bagging-Date'} = POSIX::strftime("%F", gmtime(time));
+    $param{'Bag-Software-Agent'} = 'Archive::BagIt <http://search.cpan.org/~rjeschmi/Archive-BagIt>';
+    my ($octets, $streams) = $self->calc_payload_oxum();
+    $param{'Payload-Oxum'} = "$octets.$streams";
+    $param{'Bag-Size'} = $self->calc_bagsize();
+    while(my($key, $value) = each(%param)) {
+        print($BAGINFO "$key: $value\n");
+    }
+    close($BAGINFO);
+    return 1;
+}
+
+
 =head2 init_metadata
 
 A constructor that will just create the metadata directory
@@ -485,10 +548,16 @@ sub init_metadata {
         #metadata path is not the root path for some reason
         mkdir ($self->metadata_path);
     }
-    foreach my $algorithm (keys %{$self->manifests}) {
-        $self->manifests->{$algorithm}->create_bagit();
-        $self->manifests->{$algorithm}->create_baginfo();
-    }
+
+    $self->create_bagit();
+    $self->create_baginfo();
+
+    # FIXME: deprecated?
+    #foreach my $algorithm (keys %{$self->manifests}) {
+        #$self->manifests->{$algorithm}->create_bagit();
+        #$self->manifests->{$algorithm}->create_baginfo();
+    #}
+
     return $self;
 }
 

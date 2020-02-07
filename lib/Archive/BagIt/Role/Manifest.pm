@@ -76,25 +76,4 @@ sub create_tagmanifest {
 }
 
 
-sub create_bagit {
-    my($self) = @_;
-    open(my $BAGIT, ">", $self->bagit->metadata_path."/bagit.txt") or die("Can't open $self->bagit->metadata_path/bagit.txt for writing: $!");
-    print($BAGIT "BagIt-Version: 1.0\nTag-File-Character-Encoding: UTF-8");
-    close($BAGIT);
-    return 1;
-}
-
-sub create_baginfo {
-    use POSIX;
-    my($self, %param) = @_;
-    open(my $BAGINFO, ">", $self->bagit->metadata_path."/bag-info.txt") or die("Can't open $self->bagit->metadata_path/bag-info.txt for writing: $!");
-    $param{'Bagging-Date'} = POSIX::strftime("%F", gmtime(time));
-    $param{'Bag-Software-Agent'} = 'Archive::BagIt <http://search.cpan.org/~rjeschmi/Archive-BagIt>';
-    while(my($key, $value) = each(%param)) {
-        print($BAGINFO "$key: $value\n");
-    }
-    close($BAGINFO);
-    return 1;
-}
-
 1;
