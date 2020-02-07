@@ -477,27 +477,39 @@ sub init_metadata {
         #metadata path is not the root path for some reason
         mkdir ($self->metadata_path);
     }
-    $self->manifests->{"sha512"}->create_bagit();
-    $self->manifests->{"sha512"}->create_baginfo();
+    foreach my $algorithm (keys %{$self->manifests}) {
+        $self->manifests->{$algorithm}->create_bagit();
+        $self->manifests->{$algorithm}->create_baginfo();
+    }
     return $self;
 }
 
 
 =head2 make_bag
 
-A constructor that will make and return a bag from a directory
+A constructor that will make and return a bag from a directory,
 
-If a data directory exists, assume it is already a bag (no checking for invalid files in root)
+It expects a preliminary bagit-dir exists.
+If there a data directory exists, assume it is already a bag (no checking for invalid files in root)
+
 
 =cut
 
 sub make_bag {
   my ($class, $bag_path) = @_;
+
   my $self = $class->init_metadata($bag_path);
-  $self->manifests->{"sha512"}->create_manifest();
-  $self->manifests->{"sha512"}->create_tagmanifest();
+  # it is important to create all manifest files first, because tagmanifest should include all manifest-xxx.txt
+  foreach my $algorithm ( keys %{ $self->manifests }) {
+        $self->manifests->{$algorithm}->create_manifest();
+  }
+  foreach my $algorithm ( keys %{ $self->manifests }) {
+
+        $self->manifests->{$algorithm}->create_tagmanifest();
+  }
   return $self;
 }
+
 
 __PACKAGE__->meta->make_immutable;
 

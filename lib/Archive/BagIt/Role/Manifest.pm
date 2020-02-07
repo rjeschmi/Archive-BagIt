@@ -16,7 +16,8 @@ sub BUILD {}
 
 after BUILD => sub {
     my $self = shift;
-    $self->bagit->manifests ({$self->algorithm->name, $self}) ;
+    my $algorithm = $self->algorithm->name;
+    $self->{bagit}->{manifests}->{$algorithm} = $self;
 };
 
 sub verify_file {
@@ -62,7 +63,7 @@ sub create_tagmanifest {
         if ($rel_nonpayload_file=~m/tagmanifest-.*\.txt$/) {
             # Ignore, we can't take digest from ourselves
         }
-        elsif ( -f $nonpayload_file && $nonpayload_file=~m/.*\.txt$/) {
+        elsif ( -f $nonpayload_file ) { # non-payload is all which is not payload, this allows user to define and handle own subdirs
             my $digest = $self->algorithm->verify_file( $nonpayload_file );
             print($fh "$digest  $rel_nonpayload_file\n");
         }
