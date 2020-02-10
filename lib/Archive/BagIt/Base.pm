@@ -305,11 +305,8 @@ sub _build_payload_files{
     $File::Find::name = decode ('utf8', $File::Find::name);
     $_ = decode ('utf8', $_);
     if (-f $_) {
-        #my $rel_path=File::Spec->catdir($self->rel_payload_path,File::Spec->abs2rel($File::Find::name, $payload_dir));
-        #print "pushing ".$rel_path." payload_dir: $payload_dir ($_) \n";
-        #push(@payload,$rel_path);
-        my $localpath = $payload_reldir eq "." ? $_ : "$payload_reldir/$_";
-        push @payload, $localpath; # relative to bagit base dir
+        my $rel_path=File::Spec->catdir($self->rel_payload_path,File::Spec->abs2rel($File::Find::name, $payload_dir));
+        push(@payload,$rel_path);
     }
     elsif($self->metadata_path_arr > $self->payload_path_arr && -d _ && $_ eq $self->rel_metadata_path) {
         #print "pruning ".$File::Find::name."\n";
@@ -437,7 +434,7 @@ sub verify_bag {
     foreach my $local_name (@payload) { # local_name is relative to bagit base
         my ($digest);
         unless ($manifest{"$local_name"}) {
-          die ("file found not in manifest: [$local_name]");
+          die ("file found not in manifest: [$local_name] (bag-path:$bagit)");
         }
         if (! -r "$bagit/$local_name" ) {die ("Cannot open $bagit/$local_name");}
         $digest = $digestobj->verify_file( "$bagit/$local_name");
