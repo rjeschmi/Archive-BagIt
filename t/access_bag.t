@@ -3,7 +3,7 @@ BEGIN { chdir 't' if -d 't' }
 
 use utf8;
 use open ':std', ':encoding(utf8)';
-use Test::More tests => 4;
+use Test::More tests => 6;
 use strict;
 
 
@@ -60,5 +60,6 @@ BAGINFO
     );
   is_deeply( $got, \@expected, "has all bag-info entries");
 }
-
+is ($bag->bag_info_by_key("Payload-Oxum"), "4.2", "bag_info_by_key, existing");
+is ($bag->bag_info_by_key("NoKEY"), undef, "bag_info_by_key, not found");
 __END__

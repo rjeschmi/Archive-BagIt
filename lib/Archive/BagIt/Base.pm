@@ -102,6 +102,21 @@ has 'bag_info' => (
     builder => '_build_bag_info',
 );
 
+# bag_info_by_key()
+sub bag_info_by_key {
+    my ($self, $searchkey) = @_;
+    my $info = $self->bag_info();
+    if (defined $searchkey) {
+        foreach my $entry (@{$info}) {
+            my ($key, $value) = each %{$entry};
+            if (defined $key && $key eq $searchkey) {
+                return $value;
+            }
+        }
+    }
+    undef;
+}
+
 has 'forced_fixity_algorithm' => (
     is   => 'ro',
     lazy => 1,
@@ -573,6 +588,7 @@ sub create_bagit {
     return 1;
 }
 
+# FIXME: because bag-info.txt allows multiple key-value-entries, hash should be replaced
 sub create_baginfo {
     use POSIX;
     my($self, %param) = @_;
