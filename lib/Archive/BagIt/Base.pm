@@ -96,6 +96,12 @@ has 'bag_version' => (
     builder  => '_build_bag_version',
 );
 
+has 'bag_info' => (
+    is      => 'ro',
+    lazy    => 1,
+    builder => '_build_bag_info',
+);
+
 has 'forced_fixity_algorithm' => (
     is   => 'ro',
     lazy => 1,
@@ -334,6 +340,67 @@ sub _build_bag_version {
     close($BAGIT);
     $version_string =~ /^BagIt-Version: ([0-9.]+)$/;
     return $1 || 0;
+}
+
+sub _parse_bag_info { # parses a bag-info textblob
+    my ($self, $textblob) = @_;
+    #    metadata elements are OPTIONAL and MAY be repeated.  Because "bag-
+    #    info.txt" is intended for human reading and editing, ordering MAY be
+    #    significant and the ordering of metadata elements MUST be preserved.
+    #
+    #    A metadata element MUST consist of a label, a colon ":", a single
+    #    linear whitespace character (space or tab), and a value that is
+    #    terminated with an LF, a CR, or a CRLF.
+    #
+    #    The label MUST NOT contain a colon (:), LF, or CR.  The label MAY
+    #    contain linear whitespace characters but MUST NOT start or end with
+    #    whitespace.
+    #
+    #    It is RECOMMENDED that lines not exceed 79 characters in length.
+    #    Long values MAY be continued onto the next line by inserting a LF,
+    #    CR, or CRLF, and then indenting the next line with one or more linear
+    #    white space characters (spaces or tabs).  Except for linebreaks, such
+    #    padding does not form part of the value.
+    #
+    #    Implementations wishing to support previous BagIt versions MUST
+    #    accept multiple linear whitespace characters before and after the
+    #    colon when the bag version is earlier than 1.0; such whitespace does
+    #    not form part of the label or value.
+    # find all labels
+    my @labels;
+    my $label_rx = qr/^([^:\s]+)\s*:\s*/;
+    my $eol_rx = qr/[\r\n]/;
+    while ($textblob =~ s/$label_rx//m) { # label if starts with chars not colon or whitespace followed by zero or more spaces, a colon, zero or more spaces
+        # label found
+        my $label = $1; my $value;
+
+        if ($textblob =~ s/(.+?)(?=^\S)//ms) {
+            # value if rest string starts with chars not \r and/or \n until a non-whitespace after \r\n
+            $value =$1;
+            chomp $value;
+        } elsif ($textblob =~ s/(.*)//s) {
+            $value = $1;
+            chomp $value;
+        }
+        push @labels, { $label, $value };
+    }
+    return \@labels;
+}
+
+sub _build_bag_info {
+    my ($self) = @_;
+    my $bagit = $self->metadata_path;
+    my $file = join("/", $bagit, "bag-info.txt");
+    open(my $BAGINFO, "<", $file) or die("Cannot read $file: $!");
+
+    my @lines;
+    foreach my $line (<$BAGINFO>) {
+        push @lines, $line;
+    }
+    close($BAGINFO);
+    my $lines = join("", @lines);
+    return $self->_parse_bag_info ($lines);
+
 }
 
 sub _build_non_payload_files {
