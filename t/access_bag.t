@@ -1,4 +1,4 @@
-
+# this file tests how bag information could be accessed
 BEGIN { chdir 't' if -d 't' }
 
 use utf8;
@@ -60,7 +60,5 @@ BAGINFO
     );
   is_deeply( $got, \@expected, "has all bag-info entries");
 }
-
-
 
 __END__
