@@ -97,7 +97,7 @@ has 'bag_version' => (
 );
 
 has 'bag_info' => (
-    is      => 'ro',
+    is      => 'rw',
     lazy    => 1,
     builder => '_build_bag_info',
 );
