@@ -608,7 +608,11 @@ sub create_baginfo {
     use POSIX;
     my($self) = @_; # because bag-info.txt allows multiple key-value-entries, hash is replaced
     my @baginfo;
-    if (exists $self->{bag_info}) {
+    if (
+        exists $self->{bag_info} &&
+            (keys %{$self->{bag_info}} > 0)
+    ) {
+        warn "Oh, bag-info.txt already written, re-create it\n" if $DEBUG;
         @baginfo = grep {
             my ($key,) = each %{$_};
             $key ne 'Bagging-Date' &&
@@ -616,7 +620,6 @@ sub create_baginfo {
                 $key ne 'Payload-Oxum' &&
                 $key ne 'Bag-Size'
         } @{ $self->bag_info() };
-
     }
     push @baginfo, {'Bagging-Date', POSIX::strftime("%F", gmtime(time))};
     push @baginfo, {'Bag-Software-Agent', 'Archive::BagIt <https://metacpan.org/pod/Archive::BagIt>'};
@@ -634,6 +637,25 @@ sub create_baginfo {
     return 1;
 }
 
+=head2 store
+
+store a bagit-obj if bagit directory-structure was already constructed,
+
+=cut
+
+sub store {
+    my($self) = @_;
+    $self->create_bagit();
+    $self->create_baginfo();
+    # it is important to create all manifest files first, because tagmanifest should include all manifest-xxx.txt
+    foreach my $algorithm ( keys %{ $self->manifests }) {
+        $self->manifests->{$algorithm}->create_manifest();
+    }
+    foreach my $algorithm ( keys %{ $self->manifests }) {
+
+        $self->manifests->{$algorithm}->create_tagmanifest();
+    }
+}
 
 =head2 init_metadata
 
@@ -658,8 +680,7 @@ sub init_metadata {
         mkdir ($self->metadata_path);
     }
 
-    $self->create_bagit();
-    $self->create_baginfo();
+    $self->store();
 
     # FIXME: deprecated?
     #foreach my $algorithm (keys %{$self->manifests}) {
@@ -683,16 +704,11 @@ If there a data directory exists, assume it is already a bag (no checking for in
 
 sub make_bag {
   my ($class, $bag_path) = @_;
-
+  my $isa = ref $class;
+  if ($isa eq "Archive::BagIt::Base") { # not a class, but an object!
+    die "make_bag() only a class subroutine, not useable with objects. Try store() instead!\n";
+  }
   my $self = $class->init_metadata($bag_path);
-  # it is important to create all manifest files first, because tagmanifest should include all manifest-xxx.txt
-  foreach my $algorithm ( keys %{ $self->manifests }) {
-        $self->manifests->{$algorithm}->create_manifest();
-  }
-  foreach my $algorithm ( keys %{ $self->manifests }) {
-
-        $self->manifests->{$algorithm}->create_tagmanifest();
-  }
   return $self;
 }
 
