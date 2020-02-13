@@ -358,7 +358,7 @@ sub _build_bag_version {
 }
 
 sub __sort_bag_info {
-    sort {
+    return sort {
         my %tmpa = %{$a};
         my %tmpb = %{$b};
         my ($ka, $va) = each %tmpa;
@@ -613,9 +613,10 @@ sub create_baginfo {
     my ($octets, $streams) = $self->calc_payload_oxum();
     push @baginfo, {'Payload-Oxum', "$octets.$streams"};
     push @baginfo, {'Bag-Size', $self->calc_bagsize()};
-    $self->bag_info( \@baginfo);
+    my @sorted = __sort_bag_info( @baginfo );
+    $self->bag_info( \@sorted);
     open(my $BAGINFO, ">", $self->metadata_path."/bag-info.txt") or die("Can't open $self->metadata_path/bag-info.txt for writing: $!");
-    foreach my $entry (__sort_bag_info(@baginfo)) {
+    foreach my $entry (@sorted) {
         my ($key, $value) = each %{$entry};
         print($BAGINFO "$key: $value\n");
     }
