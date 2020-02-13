@@ -594,11 +594,12 @@ sub create_baginfo {
     my($self, %param) = @_;
     open(my $BAGINFO, ">", $self->metadata_path."/bag-info.txt") or die("Can't open $self->metadata_path/bag-info.txt for writing: $!");
     $param{'Bagging-Date'} = POSIX::strftime("%F", gmtime(time));
-    $param{'Bag-Software-Agent'} = 'Archive::BagIt <http://search.cpan.org/~rjeschmi/Archive-BagIt>';
+    $param{'Bag-Software-Agent'} = 'Archive::BagIt <https://metacpan.org/pod/Archive::BagIt>';
     my ($octets, $streams) = $self->calc_payload_oxum();
     $param{'Payload-Oxum'} = "$octets.$streams";
     $param{'Bag-Size'} = $self->calc_bagsize();
-    while(my($key, $value) = each(%param)) {
+    foreach my $key (sort keys %param) {
+        my $value = $param{$key};
         print($BAGINFO "$key: $value\n");
     }
     close($BAGINFO);
