@@ -414,8 +414,10 @@ sub _parse_bag_info { # parses a bag-info textblob
             push @labels, { "$label" => "$value" };
         }
     }
-    my @sorted = __sort_bag_info(@labels);
-    return \@sorted;
+    # The RFC does not allow reordering:
+    #my @sorted = __sort_bag_info(@labels);
+    #return \@sorted;
+    return \@labels;
 }
 
 sub _build_bag_info {
@@ -626,7 +628,9 @@ sub create_baginfo {
     my ($octets, $streams) = $self->calc_payload_oxum();
     push @baginfo, {'Payload-Oxum', "$octets.$streams"};
     push @baginfo, {'Bag-Size', $self->calc_bagsize()};
-    my @sorted = __sort_bag_info( @baginfo );
+    # The RFC does not allow reordering:
+    # my @sorted = __sort_bag_info( @baginfo );
+    my @sorted = @baginfo;
     $self->bag_info( \@sorted);
     open(my $BAGINFO, ">", $self->metadata_path."/bag-info.txt") or die("Can't open $self->metadata_path/bag-info.txt for writing: $!");
     foreach my $entry (@sorted) {
