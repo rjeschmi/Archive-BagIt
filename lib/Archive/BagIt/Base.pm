@@ -383,11 +383,9 @@ sub _parse_bag_info { # parses a bag-info textblob
     #    not form part of the label or value.
     # find all labels
     my @labels;
-    my $label_rx = qr/^([^:\s]+)\s*:\s*/;
-    my $eol_rx = qr/[\r\n]/;
-    while ($textblob =~ s/$label_rx//m) { # label if starts with chars not colon or whitespace followed by zero or more spaces, a colon, zero or more spaces
+    while ($textblob =~ s/^([^:\s]+)\s*:\s*//m) { # label if starts with chars not colon or whitespace followed by zero or more spaces, a colon, zero or more spaces
         # label found
-        my $label = $1; my $value;
+        my $label = $1; my $value="";
 
         if ($textblob =~ s/(.+?)(?=^\S)//ms) {
             # value if rest string starts with chars not \r and/or \n until a non-whitespace after \r\n
@@ -397,9 +395,23 @@ sub _parse_bag_info { # parses a bag-info textblob
             $value = $1;
             chomp $value;
         }
-        push @labels, { $label, $value };
+        if (defined $label) {
+            push @labels, { "$label" => "$value" };
+        }
     }
-    return \@labels;
+    my @sorted = sort {
+        my %tmpa = %{$a};
+        my %tmpb = %{$b};
+        my ($ka, $va) = each %tmpa;
+        my ($kb, $vb) = each %tmpb;
+        my $kres = $ka cmp $kb;
+        if ($kres != 0) {
+           return $kres;
+        } else {
+           return $va cmp $vb;
+        }
+    } @labels;
+    return \@sorted;
 }
 
 sub _build_bag_info {
