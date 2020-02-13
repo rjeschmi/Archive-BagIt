@@ -3,7 +3,7 @@ BEGIN { chdir 't' if -d 't' }
 
 use utf8;
 use open ':std', ':encoding(utf8)';
-use Test::More tests => 6;
+use Test::More tests => 7;
 use strict;
 
 
@@ -28,6 +28,29 @@ my $DST_BAG = File::Spec->catdir(@ROOT, 'dst_bag');
 
 ## tests
 my $bag = $Class->new({bag_path=>$SRC_BAG});
+{
+  my @unsorted = (
+      { "Foo", "Baz"},
+      { "Foo3", "Bar3"},
+      { "Foo", "Bar" },
+      { "Foo5", "Bar5"},
+      { "Foo2", "Bar2"},
+      { "Foo4", "Bar4\n  Baz4\n  Bay4"},
+  );
+  my @sorted = Archive::BagIt::Base::__sort_bag_info( @unsorted);
+  my @expected = (
+      { "Foo", "Bar" },
+      { "Foo", "Baz"},
+      { "Foo2", "Bar2"},
+      { "Foo3", "Bar3"},
+      { "Foo4", "Bar4\n  Baz4\n  Bay4"},
+      { "Foo5", "Bar5"}
+  );
+  is_deeply( \@sorted, \@expected, "__sort_bag_info");
+}
+
+
+
 is($bag->bag_version(), "0.96", "has expected bag version");
 {
   my $input =<<BAGINFO;
