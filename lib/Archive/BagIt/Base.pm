@@ -609,8 +609,8 @@ sub create_baginfo {
     my($self) = @_; # because bag-info.txt allows multiple key-value-entries, hash is replaced
     my @baginfo;
     if (
-        exists $self->{bag_info} &&
-            (keys %{$self->{bag_info}} > 0)
+        exists $self->{bag_info}
+
     ) {
         warn "Oh, bag-info.txt already written, re-create it\n" if $DEBUG;
         @baginfo = grep {
@@ -655,6 +655,7 @@ sub store {
 
         $self->manifests->{$algorithm}->create_tagmanifest();
     }
+    1;
 }
 
 =head2 init_metadata
