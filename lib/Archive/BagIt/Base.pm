@@ -608,6 +608,16 @@ sub create_baginfo {
     use POSIX;
     my($self) = @_; # because bag-info.txt allows multiple key-value-entries, hash is replaced
     my @baginfo;
+    if (exists $self->{bag_info}) {
+        @baginfo = grep {
+            my ($key,) = each %{$_};
+            $key ne 'Bagging-Date' &&
+                $key ne 'Bag-Software-Agent' &&
+                $key ne 'Payload-Oxum' &&
+                $key ne 'Bag-Size'
+        } @{ $self->bag_info() };
+
+    }
     push @baginfo, {'Bagging-Date', POSIX::strftime("%F", gmtime(time))};
     push @baginfo, {'Bag-Software-Agent', 'Archive::BagIt <https://metacpan.org/pod/Archive::BagIt>'};
     my ($octets, $streams) = $self->calc_payload_oxum();
