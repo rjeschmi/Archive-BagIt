@@ -588,18 +588,19 @@ sub create_bagit {
     return 1;
 }
 
-# FIXME: because bag-info.txt allows multiple key-value-entries, hash should be replaced
 sub create_baginfo {
     use POSIX;
-    my($self, %param) = @_;
-    open(my $BAGINFO, ">", $self->metadata_path."/bag-info.txt") or die("Can't open $self->metadata_path/bag-info.txt for writing: $!");
-    $param{'Bagging-Date'} = POSIX::strftime("%F", gmtime(time));
-    $param{'Bag-Software-Agent'} = 'Archive::BagIt <https://metacpan.org/pod/Archive::BagIt>';
+    my($self) = @_; # because bag-info.txt allows multiple key-value-entries, hash is replaced
+    my @baginfo;
+    push @baginfo, {'Bagging-Date', POSIX::strftime("%F", gmtime(time))};
+    push @baginfo, {'Bag-Software-Agent', 'Archive::BagIt <https://metacpan.org/pod/Archive::BagIt>'};
     my ($octets, $streams) = $self->calc_payload_oxum();
-    $param{'Payload-Oxum'} = "$octets.$streams";
-    $param{'Bag-Size'} = $self->calc_bagsize();
-    foreach my $key (sort keys %param) {
-        my $value = $param{$key};
+    push @baginfo, {'Payload-Oxum', "$octets.$streams"};
+    push @baginfo, {'Bag-Size', $self->calc_bagsize()};
+    $self->bag_info( \@baginfo);
+    open(my $BAGINFO, ">", $self->metadata_path."/bag-info.txt") or die("Can't open $self->metadata_path/bag-info.txt for writing: $!");
+    foreach my $entry (sort @baginfo) {
+        my ($key, $value) = each %{$entry};
         print($BAGINFO "$key: $value\n");
     }
     close($BAGINFO);
