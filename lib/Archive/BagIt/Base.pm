@@ -357,6 +357,21 @@ sub _build_bag_version {
     return $1 || 0;
 }
 
+sub __sort_bag_info {
+    sort {
+        my %tmpa = %{$a};
+        my %tmpb = %{$b};
+        my ($ka, $va) = each %tmpa;
+        my ($kb, $vb) = each %tmpb;
+        my $kres = $ka cmp $kb;
+        if ($kres != 0) {
+            return $kres;
+        } else {
+            return $va cmp $vb;
+        }
+    } @_;
+}
+
 sub _parse_bag_info { # parses a bag-info textblob
     my ($self, $textblob) = @_;
     #    metadata elements are OPTIONAL and MAY be repeated.  Because "bag-
@@ -399,18 +414,7 @@ sub _parse_bag_info { # parses a bag-info textblob
             push @labels, { "$label" => "$value" };
         }
     }
-    my @sorted = sort {
-        my %tmpa = %{$a};
-        my %tmpb = %{$b};
-        my ($ka, $va) = each %tmpa;
-        my ($kb, $vb) = each %tmpb;
-        my $kres = $ka cmp $kb;
-        if ($kres != 0) {
-           return $kres;
-        } else {
-           return $va cmp $vb;
-        }
-    } @labels;
+    my @sorted = __sort_bag_info(@labels);
     return \@sorted;
 }
 
@@ -611,7 +615,7 @@ sub create_baginfo {
     push @baginfo, {'Bag-Size', $self->calc_bagsize()};
     $self->bag_info( \@baginfo);
     open(my $BAGINFO, ">", $self->metadata_path."/bag-info.txt") or die("Can't open $self->metadata_path/bag-info.txt for writing: $!");
-    foreach my $entry (sort @baginfo) {
+    foreach my $entry (__sort_bag_info(@baginfo)) {
         my ($key, $value) = each %{$entry};
         print($BAGINFO "$key: $value\n");
     }
