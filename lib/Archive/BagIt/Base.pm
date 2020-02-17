@@ -14,6 +14,7 @@ use File::Spec;
 use File::stat;
 use Digest::MD5;
 use Class::Load qw(load_class);
+use Carp;
 
 # VERSION
 
@@ -122,6 +123,7 @@ sub _replace_bag_info_by_first_match {
     my ($self, $searchkey, $newvalue) = @_;
     my $info = $self->bag_info();
     if (defined $searchkey) {
+        if ($searchkey =~ m/:/) { croak "key should not contain a colon! (searchkey='$searchkey')"; }
         my $size = scalar( @{$info});
         for (my $idx=0; $idx< $size; $idx++) {
             my %entry = %{ $info->[$idx] };
@@ -138,6 +140,7 @@ sub _replace_bag_info_by_first_match {
 sub _add_or_replace_bag_info {
     my ($self, $searchkey, $newvalue) = @_;
     if (defined $searchkey) {
+        if ($searchkey =~ m/:/) { croak "key should not contain a colon! (searchkey='$searchkey')"; }
         if (defined $self->{bag_info}) {
             my $idx = $self->_replace_bag_info_by_first_match( $searchkey, $newvalue);
             if (defined $idx) { return $idx;}
@@ -651,6 +654,7 @@ sub create_baginfo {
     foreach my $entry (@{ $self->bag_info() }) {
         my %tmp = %{ $entry };
         my ($key, $value) = each %tmp;
+        if ($key =~ m/:/) { carp "key should not contain a colon! (searchkey='$key')"; }
         print($BAGINFO "$key: $value\n");
     }
     close($BAGINFO);
