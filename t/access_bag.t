@@ -3,7 +3,7 @@ BEGIN { chdir 't' if -d 't' }
 
 use utf8;
 use open ':std', ':encoding(utf8)';
-use Test::More tests => 7;
+use Test::More tests => 11;
 use strict;
 
 
@@ -85,4 +85,9 @@ BAGINFO
 }
 is ($bag->bag_info_by_key("Payload-Oxum"), "4.2", "bag_info_by_key, existing");
 is ($bag->bag_info_by_key("NoKEY"), undef, "bag_info_by_key, not found");
+is ($bag->_replace_bag_info_by_first_match("NoKey", "test"), undef, "_replace_bag_info_by_first_match, not found");
+is ($bag->_add_or_replace_bag_info("Key", "Value"), -1, "add a new key-value");
+is ($bag->_replace_bag_info_by_first_match("Key", "0.0"), 3, "_replace_bag_info_by_first_match, index");
+is ($bag->bag_info_by_key("Key"), "0.0", "_replace_bag_info_by_first_match, check new value");
+#p( $bag );
 __END__

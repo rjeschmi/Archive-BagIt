@@ -117,6 +117,37 @@ sub bag_info_by_key {
     undef;
 }
 
+
+sub _replace_bag_info_by_first_match {
+    my ($self, $searchkey, $newvalue) = @_;
+    my $info = $self->bag_info();
+    if (defined $searchkey) {
+        my $size = scalar( @{$info});
+        for (my $idx=0; $idx< $size; $idx++) {
+            my %entry = %{ $info->[$idx] };
+            my ($key, $value) = each %entry;
+            if ((defined $key) && ($key eq $searchkey)) {
+                $info->[$idx] = {$searchkey => $newvalue};
+                return $idx;
+            }
+        }
+    }
+    undef;
+}
+
+sub _add_or_replace_bag_info {
+    my ($self, $searchkey, $newvalue) = @_;
+    if (defined $searchkey) {
+        if (defined $self->{bag_info}) {
+            my $idx = $self->_replace_bag_info_by_first_match( $searchkey, $newvalue);
+            if (defined $idx) { return $idx;}
+        }
+        push @{$self->{bag_info}}, {$searchkey => $newvalue};
+        return -1;
+    }
+}
+
+
 has 'forced_fixity_algorithm' => (
     is   => 'ro',
     lazy => 1,
@@ -610,18 +641,14 @@ sub create_bagit {
 sub create_baginfo {
     use POSIX;
     my($self) = @_; # because bag-info.txt allows multiple key-value-entries, hash is replaced
-    my @baginfo;
-    push @baginfo, {'Bagging-Date', POSIX::strftime("%F", gmtime(time))};
-    push @baginfo, {'Bag-Software-Agent', 'Archive::BagIt <https://metacpan.org/pod/Archive::BagIt>'};
+    $self->_add_or_replace_bag_info('Bagging-Date', POSIX::strftime("%F", gmtime(time)));
+    $self->_add_or_replace_bag_info('Bag-Software-Agent', 'Archive::BagIt <https://metacpan.org/pod/Archive::BagIt>');
     my ($octets, $streams) = $self->calc_payload_oxum();
-    push @baginfo, {'Payload-Oxum', "$octets.$streams"};
-    push @baginfo, {'Bag-Size', $self->calc_bagsize()};
+    $self->_add_or_replace_bag_info('Payload-Oxum', "$octets.$streams");
+    $self->_add_or_replace_bag_info('Bag-Size', $self->calc_bagsize());
     # The RFC does not allow reordering:
-    # my @sorted = __sort_bag_info( @baginfo );
-    my @sorted = @baginfo;
-    $self->bag_info( \@sorted);
     open(my $BAGINFO, ">", $self->metadata_path."/bag-info.txt") or die("Can't open $self->metadata_path/bag-info.txt for writing: $!");
-    foreach my $entry (@sorted) {
+    foreach my $entry (@{ $self->bag_info() }) {
         my %tmp = %{ $entry };
         my ($key, $value) = each %tmp;
         print($BAGINFO "$key: $value\n");
