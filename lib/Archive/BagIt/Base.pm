@@ -606,23 +606,11 @@ sub create_bagit {
     return 1;
 }
 
+# FIXME: How to add user staff in bag-info.txt?
 sub create_baginfo {
     use POSIX;
     my($self) = @_; # because bag-info.txt allows multiple key-value-entries, hash is replaced
     my @baginfo;
-    if (
-        exists $self->{bag_info}
-
-    ) {
-        warn "Oh, bag-info.txt already written, re-create it\n" if $DEBUG;
-        @baginfo = grep {
-            my ($key,) = each %{$_};
-            $key ne 'Bagging-Date' &&
-                $key ne 'Bag-Software-Agent' &&
-                $key ne 'Payload-Oxum' &&
-                $key ne 'Bag-Size'
-        } @{ $self->bag_info() };
-    }
     push @baginfo, {'Bagging-Date', POSIX::strftime("%F", gmtime(time))};
     push @baginfo, {'Bag-Software-Agent', 'Archive::BagIt <https://metacpan.org/pod/Archive::BagIt>'};
     my ($octets, $streams) = $self->calc_payload_oxum();
@@ -634,7 +622,8 @@ sub create_baginfo {
     $self->bag_info( \@sorted);
     open(my $BAGINFO, ">", $self->metadata_path."/bag-info.txt") or die("Can't open $self->metadata_path/bag-info.txt for writing: $!");
     foreach my $entry (@sorted) {
-        my ($key, $value) = each %{$entry};
+        my %tmp = %{ $entry };
+        my ($key, $value) = each %tmp;
         print($BAGINFO "$key: $value\n");
     }
     close($BAGINFO);
