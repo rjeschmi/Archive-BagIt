@@ -115,7 +115,7 @@ sub bag_info_by_key {
             }
         }
     }
-    undef;
+    return;
 }
 
 
@@ -134,7 +134,7 @@ sub _replace_bag_info_by_first_match {
             }
         }
     }
-    undef;
+    return;
 }
 
 sub _add_or_replace_bag_info {
@@ -233,8 +233,9 @@ around 'BUILDARGS' , sub {
 
 sub BUILD {
     my ($self, $args) = @_;
-    $self->load_plugins(("Archive::BagIt::Plugin::Manifest::MD5", "Archive::BagIt::Plugin::Manifest::SHA512"));
+    return $self->load_plugins(("Archive::BagIt::Plugin::Manifest::MD5", "Archive::BagIt::Plugin::Manifest::SHA512"));
 }
+
 sub _build_bag_path_arr {
     my ($self) = @_;
     my @split_path = File::Spec->splitdir($self->bag_path);
@@ -392,7 +393,7 @@ sub _build_bag_version {
 }
 
 sub __sort_bag_info {
-    return sort {
+    my @sorted = sort {
         my %tmpa = %{$a};
         my %tmpb = %{$b};
         my ($ka, $va) = each %tmpa;
@@ -404,6 +405,7 @@ sub __sort_bag_info {
             return $va cmp $vb;
         }
     } @_;
+    return @sorted;
 }
 
 sub _parse_bag_info { # parses a bag-info textblob
@@ -459,7 +461,6 @@ sub _build_bag_info {
     my $bagit = $self->metadata_path;
     my $file = join("/", $bagit, "bag-info.txt");
     open(my $BAGINFO, "<", $file) or die("Cannot read $file: $!");
-
     my @lines;
     foreach my $line (<$BAGINFO>) {
         push @lines, $line;
@@ -679,7 +680,7 @@ sub store {
 
         $self->manifests->{$algorithm}->create_tagmanifest();
     }
-    1;
+    return 1;
 }
 
 =head2 init_metadata

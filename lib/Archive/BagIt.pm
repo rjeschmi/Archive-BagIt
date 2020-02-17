@@ -199,6 +199,7 @@ sub _manifest_crc32 {
         $data_dir
     );
     close($fh);
+    return;
 }
 
 
@@ -225,6 +226,7 @@ sub _manifest_md5 {
         $data_dir
     );
     close($md5_fh);
+    return;
 }
 
 sub _tagmanifest_md5 {
@@ -256,6 +258,7 @@ sub _tagmanifest_md5 {
   }, $bagit);
 
   close($md5_fh);
+  return;
 }
 
 =head2 verify_bag
@@ -296,7 +299,7 @@ sub verify_bag {
     find(sub{ push(@payload, decode('utf8',$File::Find::name))  }, $payload_dir);
 
     # Evaluate each file against the manifest
-    my $digestobj = new Digest::MD5;
+    my $digestobj = Digest::MD5->new();
     foreach my $file (@payload) {
         next if (-d ($file));
         my $local_name = substr($file, length($bagit) + 1);
