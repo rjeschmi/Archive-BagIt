@@ -62,6 +62,7 @@ Foo4: Bar4
   Baz4
   Bay4
 Foo5: Bar5
+Foo6: Bar6: Baz6
 BAGINFO
   my @expected = (
       { "Foo", "Bar" },
@@ -69,7 +70,8 @@ BAGINFO
       { "Foo2", "Bar2"},
       { "Foo3", "Bar3"},
       { "Foo4", "Bar4\n  Baz4\n  Bay4"},
-      { "Foo5", "Bar5"}
+      { "Foo5", "Bar5"},
+      { "Foo6", "Bar6: Baz6"}
   );
   my $got = $bag->_parse_bag_info( $input );
   is_deeply( $got, \@expected, "bag-info parsing");
@@ -89,5 +91,6 @@ is ($bag->_replace_bag_info_by_first_match("NoKey", "test"), undef, "_replace_ba
 is ($bag->_add_or_replace_bag_info("Key", "Value"), -1, "add a new key-value");
 is ($bag->_replace_bag_info_by_first_match("Key", "0.0"), 3, "_replace_bag_info_by_first_match, index");
 is ($bag->bag_info_by_key("Key"), "0.0", "_replace_bag_info_by_first_match, check new value");
+
 #p( $bag );
 __END__
