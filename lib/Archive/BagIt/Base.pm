@@ -560,7 +560,9 @@ sub _verify_XXX_manifests {
     my $version = $self->bag_version();
     # Evaluate each file against the manifest
     foreach my $alg (keys %{$xxmanifest_entries}) {
-        my $digestobj = $self->manifests->{$alg}->algorithm();
+        my $manifest_alg = $self->manifests->{$alg};
+        if (! defined $manifest_alg) { next; }
+        my $digestobj = $manifest_alg->algorithm();
 
         my $xxfilename = "$bagit/$xxprefix-$alg.txt";
         foreach my $local_name (@payload) {
