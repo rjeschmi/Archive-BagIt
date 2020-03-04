@@ -561,7 +561,10 @@ sub _verify_XXX_manifests {
     # Evaluate each file against the manifest
     foreach my $alg (keys %{$xxmanifest_entries}) {
         my $manifest_alg = $self->manifests->{$alg};
-        if (! defined $manifest_alg) { next; }
+        if (! defined $manifest_alg) {
+            next;
+            # TODO: return Errormessage?
+        }
         my $digestobj = $manifest_alg->algorithm();
 
         my $xxfilename = "$bagit/$xxprefix-$alg.txt";
@@ -569,13 +572,13 @@ sub _verify_XXX_manifests {
             # local_name is relative to bagit base
             my ($digest);
             unless (exists $manifest{$alg}{"$local_name"}) {
-                system ("tree $bagit");
-                use File::Slurp;
-                my $vontent = read_file($xxfilename);
-                print "Content: '$vontent'\n";
-                print "Alg=$alg\n";
-                use Data::Printer;
-                p( %manifest);
+                #system ("tree $bagit");
+                #use File::Slurp;
+                #my $vontent = read_file($xxfilename);
+                #print "Content: '$vontent'\n";
+                #print "Alg=$alg\n";
+                #use Data::Printer;
+                #p( %manifest);
                 die("file found which is not in $xxfilename: [$local_name] (bag-path:$bagit)");
             }
             if (!-r "$bagit/$local_name") {die("Cannot open $bagit/$local_name");}
