@@ -15,6 +15,7 @@ use File::stat;
 use Digest::MD5;
 use Class::Load qw(load_class);
 use Carp;
+use List::Util qw( uniq);
 
 # VERSION
 
@@ -307,17 +308,21 @@ sub _build_tagmanifest_files {
 
 }
 
+
 sub _build_tagmanifest_entries {
   my ($self) = @_;
 
   my @tagmanifests = @{$self->tagmanifest_files};
   my $tagmanifest_entries = {};
+  my $bag_path=$self->bag_path();
   foreach my $tagmanifest_file (@tagmanifests) {
     die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<:encoding(utf8)", $tagmanifest_file));
+    my $algo = $tagmanifest_file;
+    $algo =~ s#^$bag_path/tagmanifest-([a-z0-9]+)\.txt$#$1#;
     while (my $line = <$TAGMANIFEST>) {
       chomp($line);
       my($digest,$file) = split(/\s+/, $line, 2);
-      $tagmanifest_entries->{$file} = $digest;
+      $tagmanifest_entries->{$algo}->{$file} = $digest;
     }
     close($TAGMANIFEST);
 
@@ -328,22 +333,31 @@ sub _build_tagmanifest_entries {
 sub _build_manifest_entries {
   my ($self) = @_;
 
-  my @manifests = @{$self->manifest_files};
-  my $manifest_entries = {};
+
+  my @manifests = @{$self->manifest_files };
+    #use Data::Printer;
+   # p( $self);
+
+    my $manifest_entries = {};
+  my $bag_path=$self->bag_path();
   foreach my $manifest_file (@manifests) {
-    die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST, "<:encoding(utf8)", $manifest_file));
+      die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST, "<:encoding(utf8)", $manifest_file));
+    my $algo = $manifest_file;
+    $algo =~ s#^$bag_path/manifest-([a-z0-9]+)\.txt$#$1#;
     while (my $line = <$MANIFEST>) {
-        chomp($line);
-        my ($digest,$file);
-        ($digest, $file) = $line =~ /^([a-f0-9]+)\s+(.+)/;
-        if(!$file) {
-          die ("This is not a valid manifest file");
-        } else {
-          print "file: $file \n" if $DEBUG;
-          $manifest_entries->{$file} = $digest;
-        }
+      chomp($line);
+      my ($digest,$file);
+      ($digest, $file) = $line =~ /^([a-f0-9]+)\s+(.+)/;
+      if(!$file) {
+        die ("This is not a valid manifest file");
+      } else {
+        print "file: $file \n" if $DEBUG;
+        $manifest_entries->{$algo}->{$file} = $digest;
+      }
     }
     close($MANIFEST);
+      #p( $self);
+
   }
 
   return $manifest_entries;
@@ -532,6 +546,86 @@ sub load_plugins {
     return 1;
 }
 
+
+sub _verify_XXX_manifests {
+    my ($self, $xxprefix, $xxmanifest_entries, $files, $return_all_errors) =@_;
+    # Read the manifest file
+    #use Data::Printer;
+    #p( $self);
+    #print Dumper($self->{entries});
+    my %manifest = %{$xxmanifest_entries};
+    my @payload = @{ $files };
+    my %invalids;
+    my $bagit = $self->bag_path;
+    my $version = $self->bag_version();
+    # Evaluate each file against the manifest
+    foreach my $alg (keys %{$xxmanifest_entries}) {
+        my $digestobj = $self->manifests->{$alg}->algorithm();
+
+        my $xxfilename = "$bagit/$xxprefix-$alg.txt";
+        foreach my $local_name (@payload) {
+            # local_name is relative to bagit base
+            my ($digest);
+            unless (exists $manifest{$alg}{"$local_name"}) {
+                system ("tree $bagit");
+                use File::Slurp;
+                my $vontent = read_file($xxfilename);
+                print "Content: '$vontent'\n";
+                print "Alg=$alg\n";
+                use Data::Printer;
+                p( %manifest);
+                die("file found which is not in $xxfilename: [$local_name] (bag-path:$bagit)");
+            }
+            if (!-r "$bagit/$local_name") {die("Cannot open $bagit/$local_name");}
+            $digest = $digestobj->verify_file("$bagit/$local_name");
+            print "digest " . $digestobj->name() . " of $bagit/$local_name: $digest\n" if $DEBUG;
+            unless ($digest eq $manifest{$alg}{$local_name}) {
+                if ($return_all_errors) {
+                    $invalids{$local_name} = $digest;
+                }
+                else {
+                    die("file: $bagit/$local_name invalid, digest ($alg) calculated=$digest, but expected=$manifest{$alg}{$local_name} in file '$xxfilename'");
+                }
+            }
+            delete($manifest{$alg}{$local_name});
+        }
+    }
+    if($return_all_errors && keys(%invalids) ) {
+        foreach my $invalid (keys(%invalids)) {
+            print "invalid: $invalid hash: ".$invalids{$invalid}."\n";
+        }
+        die ("bag verify for bagit $version failed with invalid files");
+    }
+    # Make sure there are no missing files
+    foreach my $alg (keys %manifest){
+        if (keys(%{ %manifest{$alg} } )) {die("Missing files in bag" . p(%manifest));}
+    }
+
+}
+
+sub _verify_manifests {
+    my ($self, $alg, $return_all_errors) = @_;
+    $self->_verify_XXX_manifests(
+        "manifest",
+        $self->manifest_entries(),
+        $self->payload_files(),
+        $return_all_errors
+    );
+}
+
+sub _verify_tagmanifests {
+    my ($self, $alg, $return_all_errors) = @_;
+    # filter tagmanifest-files
+    my @non_payload_files = grep { $_ !~ m/tagmanifest-[a-z0-9]+\.txt/} @{ $self->non_payload_files };
+    $self->_verify_XXX_manifests(
+        "tagmanifest",
+        $self->tagmanifest_entries,
+        \@non_payload_files,
+        $return_all_errors
+    );
+}
+
+
 =head2 verify_bag
 
 An interface to verify a bag.
@@ -547,11 +641,12 @@ sub verify_bag {
     #like $return all errors rather than dying on first one
     my $bagit = $self->bag_path;
     my $version = $self->bag_version(); # to call trigger
-    my $manifest_file = $self->metadata_path."/manifest-".$self->forced_fixity_algorithm()->name().".txt"; # FIXME: use plugin instead
+    my $forced_fixity_alg = $self->forced_fixity_algorithm()->name();
+    my $manifest_file = $self->metadata_path."/manifest-$forced_fixity_alg.txt"; # FIXME: use plugin instead
     my $payload_dir   = $self->payload_path;
     my $return_all_errors = $opts->{return_all_errors};
-    my %invalids;
-    my @payload       = @{$self->payload_files};
+
+
 
     die("$manifest_file is not a regular file for bagit $version") unless -f ($manifest_file);
     die("$payload_dir is not a directory") unless -d ($payload_dir);
@@ -560,38 +655,14 @@ sub verify_bag {
         die ("Bag Version $version is unsupported");
     }
 
-    # Read the manifest file
-    #print Dumper($self->{entries});
-    my %manifest = %{$self->manifest_entries};
+    # check forced fixity
+    $self->_verify_manifests($forced_fixity_alg, $return_all_errors);
+    $self->_verify_tagmanifests($forced_fixity_alg, $return_all_errors);
 
-    # Evaluate each file against the manifest
-    my $digestobj = $self->forced_fixity_algorithm();
-    foreach my $local_name (@payload) { # local_name is relative to bagit base
-        my ($digest);
-        unless ($manifest{"$local_name"}) {
-          die ("file found not in manifest: [$local_name] (bag-path:$bagit)");
-        }
-        if (! -r "$bagit/$local_name" ) {die ("Cannot open $bagit/$local_name");}
-        $digest = $digestobj->verify_file( "$bagit/$local_name");
-        print "digest of $bagit/$local_name: $digest\n" if $DEBUG;
-        unless ($digest eq $manifest{$local_name}) {
-          if($return_all_errors) {
-            $invalids{$local_name} = $digest;
-          }
-          else {
-            die ("file: $bagit/$local_name invalid");
-          }
-        }
-        delete($manifest{$local_name});
-    }
-    if($return_all_errors && keys(%invalids) ) {
-      foreach my $invalid (keys(%invalids)) {
-        print "invalid: $invalid hash: ".$invalids{$invalid}."\n";
-      }
-      die ("bag verify for bagit $version failed with invalid files");
-    }
-    # Make sure there are no missing files
-    if (keys(%manifest)) { die ("Missing files in bag".p(%manifest)); }
+
+    # TODO: check if additional algorithms are used
+
+
 
     return 1;
 }
