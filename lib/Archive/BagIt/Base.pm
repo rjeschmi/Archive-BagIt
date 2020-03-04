@@ -598,7 +598,7 @@ sub _verify_XXX_manifests {
     }
     # Make sure there are no missing files
     foreach my $alg (keys %manifest){
-        if (keys(%{ %manifest{$alg} } )) {die("Missing files in bag" . p(%manifest));}
+        if (keys(%{ $manifest{$alg} } )) {die("Missing files in bag" . p(%manifest));}
     }
 
 }
