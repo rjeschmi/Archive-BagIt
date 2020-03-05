@@ -110,9 +110,8 @@ sub bag_info_by_key {
     my $info = $self->bag_info();
     if (defined $searchkey) {
         foreach my $entry (@{$info}) {
-            my ($key, $value) = each %{$entry};
-            if (defined $key && $key eq $searchkey) {
-                return $value;
+            if (exists $entry->{$searchkey}) {
+                return $entry->{$searchkey};
             }
         }
     }
