@@ -3,7 +3,7 @@ BEGIN { chdir 't' if -d 't' }
 
 use utf8;
 use open ':std', ':encoding(utf8)';
-use Test::More tests => 13;
+use Test::More tests => 14;
 use Test::Exception;
 use strict;
 
@@ -77,6 +77,38 @@ BAGINFO
   my $got = $bag->_parse_bag_info( $input );
   is_deeply( $got, \@expected, "bag-info parsing");
 }
+# real world example
+{
+  my $input =<<BAGINFO;
+Bagging-Date: 2020-03-05
+Bag-Software-Agent: Archive::BagIt <https://metacpan.org/pod/Archive::BagIt>
+Payload-Oxum: 0.0
+Bag-Size: 0 B
+SLUBArchiv-archivalValueDescription: Gesetzlicher Auftrag der SLUB Dresden
+SLUBArchiv-exportToArchiveDate: 20191127T120000.00
+SLUBArchiv-externalId: 99193991991991
+SLUBArchiv-externalWorkflow: kitodo
+SLUBArchiv-hasConservationReason: true
+SLUBArchiv-rightsVersion: 1.0
+SLUBArchiv-sipVersion: v2020.1
+BAGINFO
+  my @expected = (
+      {"Bagging-Date", "2020-03-05"},
+      {"Bag-Software-Agent", "Archive::BagIt <https://metacpan.org/pod/Archive::BagIt>"},
+      {"Payload-Oxum", "0.0"},
+      {"Bag-Size", "0 B"},
+      {"SLUBArchiv-archivalValueDescription", "Gesetzlicher Auftrag der SLUB Dresden"},
+      {"SLUBArchiv-exportToArchiveDate", "20191127T120000.00"},
+      {"SLUBArchiv-externalId", "99193991991991"},
+      {"SLUBArchiv-externalWorkflow", "kitodo"},
+      {"SLUBArchiv-hasConservationReason", "true"},
+      {"SLUBArchiv-rightsVersion", "1.0"},
+      {"SLUBArchiv-sipVersion", "v2020.1"},
+  );
+  my $got = $bag->_parse_bag_info( $input );
+  is_deeply( $got, \@expected, "bag-info parsing (2)");
+}
+
 {
   my $got = $bag->bag_info();
   my @expected = (
