@@ -308,68 +308,42 @@ sub _build_tagmanifest_files {
 
 }
 
+sub __build_xxxmanifest_entries {
+  my ($self, $xxmanifestfiles) = @_;
+  my @xxmanifests = @{$xxmanifestfiles};
+  my $xxmanifest_entries = {};
+  my $bag_path=$self->bag_path();
+  foreach my $xxmanifest_file (@xxmanifests) {
+    die("Cannot open $xxmanifest_file: $!") unless (open(my $XXMANIFEST,"<:encoding(utf8)", $xxmanifest_file));
+    my $algo = $xxmanifest_file;
+    $algo =~ s#^($bag_path/).bagit/#$1#; # FIXME: only for dotbagit-variant, if dotbagit will be outdated, this should be removed
+    $algo =~ s#^$bag_path/##;
+    $algo =~ s#^tag##;
+    $algo =~ s#^manifest-([a-z0-9]+)\.txt$#$1#;
+    while (my $line = <$XXMANIFEST>) {
+      chomp($line);
+      my($digest,$file) = split(/\s+/, $line, 2);
+      $xxmanifest_entries->{$algo}->{$file} = $digest;
+    }
+    close($XXMANIFEST);
+  }
+  return $xxmanifest_entries;
+}
 
 sub _build_tagmanifest_entries {
   my ($self) = @_;
-
-  my @tagmanifests = @{$self->tagmanifest_files};
-  my $tagmanifest_entries = {};
-  my $bag_path=$self->bag_path();
-  foreach my $tagmanifest_file (@tagmanifests) {
-    die("Cannot open $tagmanifest_file: $!") unless (open(my $TAGMANIFEST,"<:encoding(utf8)", $tagmanifest_file));
-    my $algo = $tagmanifest_file;
-    $algo =~ s#^$bag_path/tagmanifest-([a-z0-9]+)\.txt$#$1#;
-    while (my $line = <$TAGMANIFEST>) {
-      chomp($line);
-      my($digest,$file) = split(/\s+/, $line, 2);
-      $tagmanifest_entries->{$algo}->{$file} = $digest;
-    }
-    close($TAGMANIFEST);
-
-  }
-  return $tagmanifest_entries;
+  return $self->__build_xxxmanifest_entries($self->tagmanifest_files);
 }
 
 sub _build_manifest_entries {
   my ($self) = @_;
-
-
-  my @manifests = @{$self->manifest_files };
-    #use Data::Printer;
-   # p( $self);
-
-    my $manifest_entries = {};
-  my $bag_path=$self->bag_path();
-  foreach my $manifest_file (@manifests) {
-      die("Cannot open $manifest_file: $!") unless (open (my $MANIFEST, "<:encoding(utf8)", $manifest_file));
-    my $algo = $manifest_file;
-    $algo =~ s#^$bag_path/manifest-([a-z0-9]+)\.txt$#$1#;
-    while (my $line = <$MANIFEST>) {
-      chomp($line);
-      my ($digest,$file);
-      ($digest, $file) = $line =~ /^([a-f0-9]+)\s+(.+)/;
-      if(!$file) {
-        die ("This is not a valid manifest file");
-      } else {
-        print "file: $file \n" if $DEBUG;
-        $manifest_entries->{$algo}->{$file} = $digest;
-      }
-    }
-    close($MANIFEST);
-      #p( $self);
-
-  }
-
-  return $manifest_entries;
-
+  return $self->__build_xxxmanifest_entries($self->manifest_files);
 }
 
 sub _build_payload_files{
   my($self) = @_;
-
   my $payload_dir = $self->payload_path;
   my $payload_reldir = $self->rel_payload_path;
-
   my @payload=();
   File::Find::find( sub{
     $File::Find::name = decode ('utf8', $File::Find::name);
@@ -603,7 +577,12 @@ sub _verify_XXX_manifests {
     }
     # Make sure there are no missing files
     foreach my $alg (keys %manifest){
-        if (keys(%{ $manifest{$alg} } )) {die("Missing files in bag" . p(%manifest));}
+        my @localfiles = keys(%{ $manifest{$alg} });
+        if (@localfiles) {
+            use Data::Printer;
+            p( $self);
+            die("Missing files in bag $bagit for algorithm=$alg", join( " file=", @localfiles));
+        }
     }
 
 }
