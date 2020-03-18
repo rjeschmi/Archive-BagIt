@@ -31,15 +31,16 @@ Achive::BagIt::Base - The common base for both Bagit and dotBagIt
 
 =over
 
-=item Robert Schmidt, <rjeschmi at gmail.com>
+=item Robert Schmidt, E<lt>rjeschmi at gmail.comE<gt>
 
-=item William Wueppelmann, <william at c7a.ca>
+=item William Wueppelmann, E<lt>william at c7a.caE<gt>
 
-=item Andreas Romeyke, <pause at andreas minus romeyke.de>
+=item Andreas Romeyke, E<lt>pause at andreas minus romeyke.deE<gt>
 
 =back
 
 =head1 CONTRIBUTORS
+
 
 =over
 
@@ -53,7 +54,6 @@ The original development version is on github at L<http://github.com/rjeschmi/Ar
 and may be cloned from L<git://github.com/rjeschmi/Archive-BagIt.git>
 
 The actual development version is available at L<https://art1pirat.spdns.org/art1/Archive-BagIt>
-
 
 =cut
 
