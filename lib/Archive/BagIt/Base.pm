@@ -27,6 +27,34 @@ my $DEBUG=0;
 
 Achive::BagIt::Base - The common base for both Bagit and dotBagIt
 
+=head1 AUTHORS
+
+=over
+
+=item Robert Schmidt, <rjeschmi at gmail.com>
+
+=item William Wueppelmann, <william at c7a.ca>
+
+=item Andreas Romeyke, <pause at andreas minus romeyke.de>
+
+=back
+
+=head1 CONTRIBUTORS
+
+=over
+
+=item Serhiy Bolkun
+
+=back
+
+=head1 SOURCE
+
+The original development version is on github at L<http://github.com/rjeschmi/Archive-BagIt>
+and may be cloned from L<git://github.com/rjeschmi/Archive-BagIt.git>
+
+The actual development version is available at L<https://art1pirat.spdns.org/art1/Archive-BagIt>
+
+
 =cut
 
 has 'bag_path' => (
