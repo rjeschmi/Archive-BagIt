@@ -4,7 +4,7 @@ Archive::BagIt
 
 # VERSION
 
-version 0.054
+version 0.055
 
 # SYNOPSIS
 
@@ -29,12 +29,10 @@ and I will endeavour to maintain compatibility with it.
 
 # WARNING
 
-This is experimental software for the moment and under active development. I
-hope to have a beta version available soon.
+This is experimental software for the moment and under active development.
 
-We use it fairly widely in-house, but it doesn't necessarily implement all of the specs.
-
-Email me with anything you need done urgently.
+Under the hood, the module Archive::BagIt::Base was adapted and extended to
+support BagIt 1.0 according to RFC 8493 ([https://tools.ietf.org/html/rfc8493](https://tools.ietf.org/html/rfc8493)).
 
 Also: Check out Archive::BagIt::Fast if you are willing to add some extra dependendies to get
 better speed by mmap-ing files.
@@ -85,8 +83,13 @@ You might also want to check Archive::BagIt::Fast to see a more direct way of ac
 
 # AUTHOR
 
-Robert Schmidt, <rjeschmi at gmail.com>
-William Wueppelmann, <william at c7a.ca>
+* Robert Schmidt, <rjeschmi at gmail.com>
+* William Wueppelmann, <william at c7a.ca>
+* Andreas Romeyke, <pause@andreas-romeyke.de>
+
+# CONTRIBUTORS
+
+* Serhiy Bolkun
 
 # BUGS
 
@@ -135,21 +138,18 @@ site near you, or see [https://metacpan.org/module/Archive::BagIt/](https://meta
 
 # SOURCE
 
-The development version is on github at [http://github.com/rjeschmi/Archive-BagIt](http://github.com/rjeschmi/Archive-BagIt)
+The original development version is on github at [http://github.com/rjeschmi/Archive-BagIt](http://github.com/rjeschmi/Archive-BagIt)
 and may be cloned from [git://github.com/rjeschmi/Archive-BagIt.git](git://github.com/rjeschmi/Archive-BagIt.git)
+
+The actual development version is available at [https://art1pirat.spdns.org/art1/Archive-BagIt](https://art1pirat.spdns.org/art1/Archive-BagIt)
+
 
 # BUGS AND LIMITATIONS
 
 You can make new bug reports, and view existing ones, through the
-web interface at [https://github.com/rjeschmi/Archive-BagIt/issues](https://github.com/rjeschmi/Archive-BagIt/issues).
+web interface at
+[https://art1pirat.spdns.org/art1/Archive-BagIt/issues](https://art1pirat.spdns.org/art1/Archive-BagIt/issues)
 
-# AUTHOR
+(old Issues tracked at [https://github.com/rjeschmi/Archive-BagIt/issues](https://github.com/rjeschmi/Archive-BagIt/issues))
 
-Rob Schmidt <rjeschmi@gmail.com>
 
-# COPYRIGHT AND LICENSE
-
-This software is copyright (c) 2015 by Rob Schmidt and William Wueppelmann.
-
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
