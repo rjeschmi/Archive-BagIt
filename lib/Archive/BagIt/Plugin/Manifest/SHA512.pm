@@ -32,16 +32,17 @@ sub BUILD {
     my ($self) = @_;
     $self->bagit->load_plugins(("Archive::BagIt::Plugin::Algorithm::SHA512"));
     $self->algorithm($self->bagit->plugins->{"Archive::BagIt::Plugin::Algorithm::SHA512"});
+    return 1;
 }
 
 sub verify_file {
     my ($self, $fh) = @_;
+    return;
 }
 
 sub verify {
     my ($self) =@_;
-
-
+    return;
 }
 
 

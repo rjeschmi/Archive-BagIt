@@ -23,6 +23,7 @@ sub BUILD {
     my ($self) = @_;
     my $plugin_name = $self->plugin_name;
     $self->bagit->plugins( { $plugin_name => $self });
+    return 1;
 }
-
+no Moose;
 1;

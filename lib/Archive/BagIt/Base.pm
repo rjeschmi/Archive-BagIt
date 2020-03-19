@@ -41,7 +41,6 @@ Achive::BagIt::Base - The common base for both Bagit and dotBagIt
 
 =head1 CONTRIBUTORS
 
-
 =over
 
 =item Serhiy Bolkun
@@ -73,9 +72,9 @@ has 'metadata_path' => (
     builder => '_build_metadata_path',
 );
 
-sub _build_metadata_path { 
-    my ($self) = @_; 
-    return $self->bag_path; 
+sub _build_metadata_path {
+    my ($self) = @_;
+    return $self->bag_path;
 }
 
 
@@ -97,9 +96,9 @@ has 'payload_path' => (
     builder => '_build_payload_path',
 );
 
-sub _build_payload_path { 
-    my ($self) = @_; 
-    return $self->bag_path."/data"; 
+sub _build_payload_path {
+    my ($self) = @_;
+    return $self->bag_path."/data";
 }
 
 has 'payload_path_arr' => (
@@ -533,10 +532,10 @@ Archive::BagIt::Plugin::Algorithm::XXX where XXX is your chosen fixity algorithm
 
 sub load_plugins {
     my ($self, @plugins) = @_;
- 
-    #p(@plugins); 
-    my $loaded_plugins = $self->plugins;  
-    @plugins = grep { not exists $loaded_plugins->{$_} } @plugins; 
+
+    #p(@plugins);
+    my $loaded_plugins = $self->plugins;
+    @plugins = grep { not exists $loaded_plugins->{$_} } @plugins;
 
     return if @plugins == 0;
     foreach my $plugin (@plugins) {
@@ -611,7 +610,7 @@ sub _verify_XXX_manifests {
             die("Missing files in bag $bagit for algorithm=$alg", join( " file=", @localfiles));
         }
     }
-
+    return 1;
 }
 
 sub _verify_manifests {
@@ -622,6 +621,7 @@ sub _verify_manifests {
         $self->payload_files(),
         $return_all_errors
     );
+    return 1;
 }
 
 sub _verify_tagmanifests {
@@ -634,6 +634,7 @@ sub _verify_tagmanifests {
         \@non_payload_files,
         $return_all_errors
     );
+    return 1;
 }
 
 
@@ -723,7 +724,6 @@ sub create_bagit {
     return 1;
 }
 
-# FIXME: How to add user staff in bag-info.txt?
 sub create_baginfo {
     use POSIX;
     my($self) = @_; # because bag-info.txt allows multiple key-value-entries, hash is replaced
