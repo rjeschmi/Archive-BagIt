@@ -349,6 +349,7 @@ sub __build_xxxmanifest_entries {
     while (my $line = <$XXMANIFEST>) {
       chomp($line);
       my($digest,$file) = split(/\s+/, $line, 2);
+      next unless ((defined $digest) && (defined $file)); # empty lines!
       $xxmanifest_entries->{$algo}->{$file} = $digest;
     }
     close($XXMANIFEST);
