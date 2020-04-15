@@ -2,7 +2,6 @@ Revision history for Archive-BagIt
 
 
 {{$NEXT}}
-0.055     2020-12-13
   - support for BagIt 1.0 in Archive::BagIt::Base
   - improved verification
 
