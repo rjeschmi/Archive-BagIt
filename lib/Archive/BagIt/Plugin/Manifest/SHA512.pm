@@ -2,18 +2,18 @@ use strict;
 use warnings;
 
 #ABSTRACT: The md5 plugin (default)
-package Archive::BagIt::Plugin::Manifest::MD5;
+package Archive::BagIt::Plugin::Manifest::SHA512;
 
 use Moose;
 with 'Archive::BagIt::Role::Manifest';
 
 
-use Digest::MD5;
+use Digest::SHA;
 use Sub::Quote;
 
 has 'plugin_name' => (
     is => 'ro',
-    default => 'Archive::BagIt::Plugin::Manifest::MD5',
+    default => 'Archive::BagIt::Plugin::Manifest::SHA512',
 );
 
 has 'manifest_path' => (
@@ -30,8 +30,8 @@ has 'algorithm' => (
 
 sub BUILD {
     my ($self) = @_;
-    $self->bagit->load_plugins(("Archive::BagIt::Plugin::Algorithm::MD5"));
-    $self->algorithm($self->bagit->plugins->{"Archive::BagIt::Plugin::Algorithm::MD5"});
+    $self->bagit->load_plugins(("Archive::BagIt::Plugin::Algorithm::SHA512"));
+    $self->algorithm($self->bagit->plugins->{"Archive::BagIt::Plugin::Algorithm::SHA512"});
     return 1;
 }
 

@@ -1,9 +1,9 @@
 use strict;
 use warnings;
 
-#ABSTRACT: The default MD5 algorithm plugin
+#ABSTRACT: The default SHA algorithms plugin
 
-package Archive::BagIt::Plugin::Algorithm::MD5;
+package Archive::BagIt::Plugin::Algorithm::SHA512;
 
 use Moose;
 use namespace::autoclean;
@@ -12,26 +12,26 @@ with 'Archive::BagIt::Role::Algorithm';
 
 has 'plugin_name' => (
     is => 'ro',
-    default => 'Archive::BagIt::Plugin::Algorithm::MD5',
+    default => 'Archive::BagIt::Plugin::Algorithm::SHA512',
 );
 
 has 'name' => (
     is      => 'ro',
     isa     => 'Str',
-    default => 'md5',
+    default => 'sha512',
 );
 
-has '_digest_md5' => (
+has '_digest_sha' => (
     is => 'ro',
     lazy => 1,
-    builder => '_build_digest_md5',
+    builder => '_build_digest_sha',
     init_arg => undef,
 );
 
-sub _build_digest_md5 {
+sub _build_digest_sha {
     my ($self) = @_;
-    my $digest_md5 = new Digest::MD5;
-    return $digest_md5;
+    my $digest = Digest::SHA->new("512");
+    return $digest;
 }
 
 sub get_hash_string {
@@ -41,10 +41,9 @@ sub get_hash_string {
         = stat $fh;
     my $buffer;
     while (read($fh, $buffer, $blksize)) {
-        $self->_digest_md5->add($buffer);
+        $self->_digest_sha->add($buffer);
     }
-    return $self->_digest_md5->hexdigest;
-
+    return $self->_digest_sha->hexdigest;
 }
 
 sub verify_file {

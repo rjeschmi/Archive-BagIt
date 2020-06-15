@@ -17,12 +17,10 @@ use Data::Dumper;
 #use Data::Printer;
 =head1 WARNING
 
-This is experimental software for the moment and under active development. I
-hope to have a beta version available soon.
+This is experimental software for the moment and under active development.
 
-We use it fairly widely in-house, but it doesn't necessarily implement all of the specs.
-
-Email me with anything you need done urgently.
+Under the hood, the module Archive::BagIt::Base was adapted and extended to
+support BagIt 1.0 according to RFC 8493 ([https://tools.ietf.org/html/rfc8493](https://tools.ietf.org/html/rfc8493)).
 
 Also: Check out Archive::BagIt::Fast if you are willing to add some extra dependencies to get
 better speed by mmap-ing files.
@@ -199,6 +197,7 @@ sub _manifest_crc32 {
         $data_dir
     );
     close($fh);
+    return;
 }
 
 
@@ -225,6 +224,7 @@ sub _manifest_md5 {
         $data_dir
     );
     close($md5_fh);
+    return;
 }
 
 sub _tagmanifest_md5 {
@@ -256,6 +256,7 @@ sub _tagmanifest_md5 {
   }, $bagit);
 
   close($md5_fh);
+  return;
 }
 
 =head2 verify_bag
@@ -296,7 +297,7 @@ sub verify_bag {
     find(sub{ push(@payload, decode('utf8',$File::Find::name))  }, $payload_dir);
 
     # Evaluate each file against the manifest
-    my $digestobj = new Digest::MD5;
+    my $digestobj = Digest::MD5->new();
     foreach my $file (@payload) {
         next if (-d ($file));
         my $local_name = substr($file, length($bagit) + 1);
@@ -467,11 +468,35 @@ sub tagmanifest_files {
   return @tagmanifest_files;
 
 }
-=head1 AUTHOR
+=head1 AUTHORS
 
-Robert Schmidt, E<lt>rjeschmi at gmail.comE<gt>
-William Wueppelmann, E<lt>william at c7a.caE<gt>
+=over
 
+=item Robert Schmidt, E<lt>rjeschmi at gmail.comE<gt>
+
+=item William Wueppelmann, E<lt>william at c7a.caE<gt>
+
+=item Andreas Romeyke, E<lt>pause at andreas minus romeyke.deE<gt>
+
+=back
+
+=head1 CONTRIBUTORS
+
+
+=over
+
+=item Serhiy Bolkun
+
+=back
+
+=head1 SOURCE
+
+The original development version is on github at L<http://github.com/rjeschmi/Archive-BagIt>
+and may be cloned from L<git://github.com/rjeschmi/Archive-BagIt.git>
+
+The actual development version is available at L<https://art1pirat.spdns.org/art1/Archive-BagIt>
+
+=cut
 
 =head1 BUGS
 

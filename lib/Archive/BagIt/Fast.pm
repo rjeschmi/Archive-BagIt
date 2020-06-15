@@ -39,7 +39,7 @@ sub verify_bag {
     # Compile a list of payload files
     File::Find::find(sub{ push(@payload, $File::Find::name)  }, $payload_dir);
     # Evaluate each file against the manifest
-    my $digestobj = new Digest::MD5;
+    my $digestobj = new Digest::MD5; # FIXME: use plugins instead
     foreach my $file (@payload) {
         next if (-d ($file));
         my $local_name = substr($file, length($bagit) + 1);
@@ -62,7 +62,7 @@ sub verify_bag {
           $digest = $digestobj->add($data)->hexdigest;
         }
         else {
-          $digest = $digestobj->addfile($fh)->hexdigest;
+          $digest = $digestobj->addfile($fh)->hexdigest; # FIXME: use plugins instead
         }
         my $finish_time = time();
         $self->{stats}->{files}->{"$bagit/$local_name"}->{verify_time}= ($finish_time - $start_time);

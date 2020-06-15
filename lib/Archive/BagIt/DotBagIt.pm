@@ -1,7 +1,6 @@
 use strict;
 use warnings;
 
-
 package Archive::BagIt::DotBagIt;
 
 # VERSION
@@ -33,11 +32,10 @@ has 'payload_path' => (
     lazy => 1,
     builder => '_build_payload_path',
 );
-    
-sub _build_payload_path {
-    my ($self) = @_; 
-    return $self->bag_path; 
 
+sub _build_payload_path {
+    my ($self) = @_;
+    return $self->bag_path;
 }
 
 1;

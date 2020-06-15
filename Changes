@@ -2,6 +2,8 @@ Revision history for Archive-BagIt
 
 
 {{$NEXT}}
+  - support for BagIt 1.0 in Archive::BagIt::Base
+  - improved verification
 
 0.053     2014-12-20
   - utf8 fixes

@@ -4,39 +4,16 @@ Archive::BagIt
 
 # VERSION
 
-version 0.054
-
-# SYNOPSIS
-
-This modules will hopefully help with the basic commands needed to create
-and verify a bag. My intention is not to be strict and enforce all of the
-specification. The reference implementation is the java version
-and I will endeavour to maintain compatibility with it.
-
-    use Archive::BagIt;
-
-    #read in an existing bag:
-    my $bag_dir = "/path/to/bag";
-    my $bag = Archive::BagIt->new($bag_dir);
-
-
-    #construct bag in an existing directory
-    my $bag2 = Archive::BagIt->make_bag($bag_dir);
-
-    # Validate a BagIt archive against its manifest
-    my $bag3 = Archive::BagIt->new($bag_dir);
-    my $is_valid = $bag3->verify_bag();
+version 0.055
 
 # WARNING
 
-This is experimental software for the moment and under active development. I
-hope to have a beta version available soon.
+This is experimental software for the moment and under active development.
 
-We use it fairly widely in-house, but it doesn't necessarily implement all of the specs.
+Under the hood, the module Archive::BagIt::Base was adapted and extended to
+support BagIt 1.0 according to RFC 8493 (\[https://tools.ietf.org/html/rfc8493\](https://tools.ietf.org/html/rfc8493)).
 
-Email me with anything you need done urgently.
-
-Also: Check out Archive::BagIt::Fast if you are willing to add some extra dependendies to get
+Also: Check out Archive::BagIt::Fast if you are willing to add some extra dependencies to get
 better speed by mmap-ing files.
 
 # NAME
@@ -46,47 +23,64 @@ Archive::BagIt - An interface to make and verify bags according to the BagIt sta
 # SUBROUTINES
 
 ## new
-   An Object Oriented Interface to a bag. Opens an existing bag.
+
+An Object Oriented Interface to a bag. Opens an existing bag.
+
+    my $bag = Archive::BagIt->new('/path/to/bag');
 
 ## make\_bag
-   A constructor that will make and return a bag from a directory
 
-    If a data directory exists, assume it is already a bag (no checking for invalid files in root)
+A constructor that will make and return a bag from a directory
+
+If a data directory exists, assume it is already a bag (no checking for invalid files in root)
 
 ## verify\_bag
 
 An interface to verify a bag.
 
-You might also want to check Archive::BagIt::Fast to see a more direct way of accessing files (and thus faster).
+You might also want to check [Archive::BagIt::Fast](https://metacpan.org/pod/Archive::BagIt::Fast) to see a more direct way of
+accessing files (and thus faster).
 
 ## get\_checksum
 
-    This is the checksum for the bag, md5 of the manifest-md5.txt
+This is the checksum for the bag, md5 of the manifest-md5.txt
 
 ## version
 
-    Returns the bagit version according to the bagit.txt file.
+Returns the bagit version according to the bagit.txt file.
 
 ## payload\_files
 
-    Returns an array with all of the payload files (those files that are below the data directory)
+Returns an array with all of the payload files (those files that are below the data directory)
 
 ## non\_payload\_files
 
-    Returns an array with files that are in the root of the bag, non-manifest files
+Returns an array with files that are in the root of the bag, non-manifest files
 
 ## manifest\_files
 
-    return an array with the list of manifest files that exist in the bag
+Return an array with the list of manifest files that exist in the bag
 
 ## tagmanifest\_files
 
-    return an array with the list of tagmanifest files
+Return an array with the list of tagmanifest files
 
-# AUTHOR
+# AUTHORS
 
-Robert Schmidt, <rjeschmi at gmail.com>
-William Wueppelmann, <william at c7a.ca>
+- Robert Schmidt, &lt;rjeschmi at gmail.com>
+- William Wueppelmann, &lt;william at c7a.ca>
+- Andreas Romeyke, &lt;pause at andreas minus romeyke.de>
+
+# CONTRIBUTORS
+
+- Serhiy Bolkun
+
+# SOURCE
+
+The original development version is on github at [http://github.com/rjeschmi/Archive-BagIt](http://github.com/rjeschmi/Archive-BagIt)
+and may be cloned from [git://github.com/rjeschmi/Archive-BagIt.git](git://github.com/rjeschmi/Archive-BagIt.git)
+
+The actual development version is available at [https://art1pirat.spdns.org/art1/Archive-BagIt](https://art1pirat.spdns.org/art1/Archive-BagIt)
 
 # BUGS
 
@@ -127,6 +121,27 @@ Copyright (c) 2012, the above named author(s).
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
+# SYNOPSIS
+
+This modules will hopefully help with the basic commands needed to create
+and verify a bag. My intention is not to be strict and enforce all of the
+specification. The reference implementation is the java version
+and I will endeavour to maintain compatibility with it.
+
+    use Archive::BagIt;
+
+    #read in an existing bag:
+    my $bag_dir = "/path/to/bag";
+    my $bag = Archive::BagIt->new($bag_dir);
+
+
+    #construct bag in an existing directory
+    my $bag2 = Archive::BagIt->make_bag($bag_dir);
+
+    # Validate a BagIt archive against its manifest
+    my $bag3 = Archive::BagIt->new($bag_dir);
+    my $is_valid = $bag3->verify_bag();
+
 # AVAILABILITY
 
 The latest version of this module is available from the Comprehensive Perl
@@ -135,13 +150,13 @@ site near you, or see [https://metacpan.org/module/Archive::BagIt/](https://meta
 
 # SOURCE
 
-The development version is on github at [http://github.com/rjeschmi/Archive-BagIt](http://github.com/rjeschmi/Archive-BagIt)
-and may be cloned from [git://github.com/rjeschmi/Archive-BagIt.git](git://github.com/rjeschmi/Archive-BagIt.git)
+The development version is on github at [https://github.com/Archive-BagIt](https://github.com/Archive-BagIt)
+and may be cloned from [git://github.com/Archive-BagIt.git](git://github.com/Archive-BagIt.git)
 
 # BUGS AND LIMITATIONS
 
 You can make new bug reports, and view existing ones, through the
-web interface at [https://github.com/rjeschmi/Archive-BagIt/issues](https://github.com/rjeschmi/Archive-BagIt/issues).
+web interface at [http://rt.cpan.org](http://rt.cpan.org).
 
 # AUTHOR
 
@@ -149,7 +164,7 @@ Rob Schmidt <rjeschmi@gmail.com>
 
 # COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2015 by Rob Schmidt and William Wueppelmann.
+This software is copyright (c) 2020 by Rob Schmidt and William Wueppelmann.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
